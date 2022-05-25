@@ -10,6 +10,8 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 
+use snake::Snake;
+
 use std::io::{stdout, Write};
 
 fn main() {
@@ -21,6 +23,8 @@ fn main() {
     execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0), Print(r#"ctrl + q to exit, ctrl + h to print "Hello world", alt + t to print "crossterm is cool""#))
         .unwrap();
 
+    let snake = Snake::new();
+
     //key detection
     loop {
         //going to top left corner
@@ -30,17 +34,21 @@ fn main() {
         match read().unwrap() {
             //i think this speaks for itself
             Event::Key(KeyEvent {
-                code: KeyCode::Char('h'),
-                modifiers: KeyModifiers::CONTROL,
+                code: KeyCode::Left,
+                modifiers: KeyModifiers::NONE,
                 //clearing the screen and printing our message
             }) => execute!(stdout, Clear(ClearType::All), Print("Hello world!")).unwrap(),
             Event::Key(KeyEvent {
-                code: KeyCode::Char('t'),
-                modifiers: KeyModifiers::ALT,
+                code: KeyCode::Right,
+                modifiers: KeyModifiers::NONE,
             }) => execute!(stdout, Clear(ClearType::All), Print("crossterm is cool")).unwrap(),
             Event::Key(KeyEvent {
-                code: KeyCode::Char('q'),
-                modifiers: KeyModifiers::CONTROL,
+                code: KeyCode::Up,
+                modifiers: KeyModifiers::NONE,
+            }) => break,
+            Event::Key(KeyEvent {
+                code: KeyCode::Down,
+                modifiers: KeyModifiers::NONE,
             }) => break,
             _ => (),
         }

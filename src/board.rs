@@ -1,8 +1,15 @@
 use crate::snake::Position;
 use crate::Items;
+use rand::{prelude::{
+    thread_rng,
+    ThreadRng,
+}, Rng};
 
 pub struct Board {
-    board: Vec<Vec<Items>>
+    board: Vec<Vec<Items>>,
+    max_x: usize,
+    max_y: usize,
+    rng: ThreadRng,
 }
 
 impl Board {
@@ -20,8 +27,18 @@ impl Board {
             } 
         }
         Board {
-            board
+            board,
+            max_x: size_x,
+            max_y: size_y,
+            rng: thread_rng(),
         }
+    }
+
+    pub fn fruit(&mut self) {
+        let x = self.rng.gen_range(1..(self.max_x-2));
+        let y = self.rng.gen_range(1..(self.max_y-2));
+
+        self.change_position(&Position::new(x, y), Items::FRUIT);
     }
 
     pub fn check_position(&self, pos: &Position, ident: Items) -> bool {

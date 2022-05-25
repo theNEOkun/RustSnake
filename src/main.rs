@@ -74,10 +74,20 @@ fn main() {
 
     let mut dirr: Directions = Directions::LEFT;
 
+    let mut fruit = false;
+
+    board.fruit();
+
     //key detection
     loop {
         let curr_pos = snake.get_pos();
         board.change_position(&curr_pos, Items::SNAKE);
+
+        if fruit {
+            board.fruit();
+            fruit = false;
+        }
+
         //going to top left corner
         print_board(&board, &stdout);
 
@@ -93,21 +103,30 @@ fn main() {
                     code: KeyCode::Left,
                     modifiers: KeyModifiers::NONE,
                     //clearing the screen and printing our message
-                }) => dirr = Directions::LEFT,
+                }) => if dirr != Directions::RIGHT {
+                    dirr = Directions::LEFT
+                },
                 Event::Key(KeyEvent {
                     code: KeyCode::Right,
                     modifiers: KeyModifiers::NONE,
-                }) => dirr = Directions::RIGHT,
+                }) =>
+                if dirr != Directions::LEFT {
+                    dirr = Directions::RIGHT
+                },
                 Event::Key(KeyEvent {
                     code: KeyCode::Up,
                     modifiers: KeyModifiers::NONE,
-                }) => dirr = Directions::UP,
+                }) =>
+                if dirr != Directions::DOWN {
+                    dirr = Directions::UP
+                },
                 Event::Key(KeyEvent {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
-                }) => dirr = Directions::DOWN,
+                }) => if dirr != Directions::UP {
+                    dirr = Directions::DOWN
+                },
                 _ => (
-                    dirr = dirr
                 ),
             }
         }
@@ -116,7 +135,7 @@ fn main() {
         let pos = snake.move_snake(&dirr);
         if !board.check_position(&pos, Items::EMPTY) {
             if board.check_position(&pos, Items::FRUIT) {
-                snake.eat();
+                fruit = snake.eat();
             } else {
                 break;
             }

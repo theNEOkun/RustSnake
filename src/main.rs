@@ -61,16 +61,16 @@ fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
         }
 }
 
-fn main() {
+fn gameloop(max_size: usize) {
     let stdout = stdout();
     //going into raw mode
     enable_raw_mode().unwrap();
 
     print(r#"q to exit"#, &stdout);
 
-    let mut snake = Snake::new(MAX_SIZE, MAX_SIZE);
+    let mut snake = Snake::new(max_size, max_size);
 
-    let mut board = Board::new(MAX_SIZE, MAX_SIZE);
+    let mut board = Board::new(max_size, max_size);
 
     let mut dirr: Directions = Directions::LEFT;
 
@@ -148,4 +148,16 @@ fn main() {
 
     //disabling raw mode
     disable_raw_mode().unwrap();
+
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    match &args[1][..] {
+        "--size" => {
+            let size: usize = (&args[2][..]).parse().unwrap();
+            gameloop(size);
+        }
+        _ => gameloop(MAX_SIZE),
+    }
 }

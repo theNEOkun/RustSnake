@@ -1,20 +1,32 @@
-mod directions;
 mod snake;
+mod board;
 
 use crossterm::{
     self,
     execute,
     cursor,
-    event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
+    event::{read, poll, Event, KeyCode, KeyEvent, KeyModifiers},
     style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 
-use snake::Snake;
+use snake::{Snake, Directions};
+use board::Board;
 
-use std::io::{stdout, Write};
+use std::{
+    io::{
+        stdout, Write
+    },
+    time::Duration,
+    thread::sleep,
+};
 
 const MAX_SIZE: usize = 16;
+
+const WALL: &str = " #";
+const EMPTY: &str = "  ";
+const SNAKE: &str = " 0";
+const FRUIT: &str = " %";
 
 fn print(o_str: &str, mut stdout: &std::io::Stdout) {
 
@@ -23,63 +35,87 @@ fn print(o_str: &str, mut stdout: &std::io::Stdout) {
         .unwrap();
 }
 
-fn main() {
-    let mut stdout = stdout();
-
-    print(r#"q to exit"#, &stdout);
-
-    let snake = Snake::new();
-
-    let mut board = vec![vec!["  "; MAX_SIZE]; MAX_SIZE];
-
-    let mut o_string = String::from("\n");
-
-    for (y_pos, each) in board.iter().enumerate() {
-        for (x_pos, mut string) in each.iter().enumerate() {
-            if x_pos == (MAX_SIZE - 1) || x_pos == 0 {
-                string = &&" #";
-            } else if y_pos == (MAX_SIZE-1) || y_pos == 0 {
-                string = &&" #";
-            }
+fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
+    execute!(stdout, Clear(ClearType::All)).unwrap();
+    for (x, each) in board.get_vec().iter().enumerate() {
+        let mut o_string = String::new();
+        for string in each {
             o_string += string;
         }
         o_string += "\n";
-    }
-    print(&o_string, &stdout);
+        execute!(stdout, cursor::MoveTo(0, x as u16), Print(o_string))
+            .unwrap();
+        }
+}
 
-    /*
+fn main() {
+    let stdout = stdout();
+    //going into raw mode
+    enable_raw_mode().unwrap();
+
+    print(r#"q to exit"#, &stdout);
+
+    let mut snake = Snake::new(MAX_SIZE, MAX_SIZE);
+
+    let mut board = Board::new(MAX_SIZE, MAX_SIZE);
+
+
+    let mut dirr: Directions = Directions::LEFT;
+
     //key detection
     loop {
+        let curr_pos = snake.get_pos();
+        board.change_position(&curr_pos, SNAKE);
         //going to top left corner
-        execute!(stdout, cursor::MoveTo(0, 0)).unwrap();
+        print_board(&board, &stdout);
 
-        //matching the key
-        match read().unwrap() {
-            //i think this speaks for itself
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('q'),
-                modifiers: KeyModifiers::NONE,
-            }) => break,
-            Event::Key(KeyEvent {
-                code: KeyCode::Left,
-                modifiers: KeyModifiers::NONE,
-                //clearing the screen and printing our message
-            }) => execute!(stdout, Clear(ClearType::All), Print("Hello world!")).unwrap(),
-            Event::Key(KeyEvent {
-                code: KeyCode::Right,
-                modifiers: KeyModifiers::NONE,
-            }) => execute!(stdout, Clear(ClearType::All), Print("crossterm is cool")).unwrap(),
-            Event::Key(KeyEvent {
-                code: KeyCode::Up,
-                modifiers: KeyModifiers::NONE,
-            }) => break,
-            Event::Key(KeyEvent {
-                code: KeyCode::Down,
-                modifiers: KeyModifiers::NONE,
-            }) => break,
-            _ => (),
+        if poll(Duration::from_millis(100)).unwrap() {
+            //matching the key
+            match read().unwrap() {
+                //i think this speaks for itself
+                Event::Key(KeyEvent {
+                    code: KeyCode::Char('q'),
+                    modifiers: KeyModifiers::NONE,
+                }) => break,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Left,
+                    modifiers: KeyModifiers::NONE,
+                    //clearing the screen and printing our message
+                }) => dirr = Directions::LEFT,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Right,
+                    modifiers: KeyModifiers::NONE,
+                }) => dirr = Directions::RIGHT,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Up,
+                    modifiers: KeyModifiers::NONE,
+                }) => dirr = Directions::UP,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Down,
+                    modifiers: KeyModifiers::NONE,
+                }) => dirr = Directions::DOWN,
+                _ => (
+                    dirr = dirr
+                ),
+            }
         }
-    }
-    */
+        sleep(Duration::from_millis(50));
 
+        let pos = snake.move_snake(&dirr);
+        if !board.check_position(&pos, EMPTY) {
+            if board.check_position(&pos, FRUIT) {
+                snake.eat();
+            } else {
+                break;
+            }
+        }
+        if let Some(last_pos) = snake.get_back() {
+            board.change_position(&last_pos, EMPTY);
+        }
+
+        snake.set_pos(pos);
+    }
+
+    //disabling raw mode
+    disable_raw_mode().unwrap();
 }

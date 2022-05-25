@@ -1,37 +1,82 @@
-use crate::directions::Directions;
+use std::collections::VecDeque;
+
+pub enum Directions {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
+
+#[derive(Clone)]
+pub struct Position {
+    pub x: usize,
+    pub y: usize
+}
+
+impl Position {
+    pub fn new(x: usize, y: usize) -> Self {
+        Position {
+            x, y
+        }
+    }
+}
 
 pub struct Snake {
-    x_pos: u32,
-    y_pos: u32,
-    size: u32
+    pos: Position,
+    full_size: VecDeque<Position>,
+    size: usize
 }
 
 impl Snake {
-    pub fn new() -> Self {
+    pub fn new(max_size_x: usize, max_size_y: usize) -> Self {
+        let mut full_size = VecDeque::new();
+        let pos = Position::new(max_size_x/2, max_size_y/2);
+        full_size.push_front(pos.clone());
         Snake {
-            x_pos: 0,
-            y_pos: 0,
+            pos,
+            full_size,
             size: 4,
         }
     }
 
-    pub fn get_pos(&self) -> (u32, u32) {
-        (self.x_pos, self.y_pos)
+    pub fn get_back(&mut self) -> Option<Position> {
+        return if self.full_size.len() >= self.size {
+            Some(self.full_size.pop_back().unwrap())
+        } else {
+            None
+        }
     }
 
-    pub fn move_snake(&mut self, direction: Directions) {
-        match direction {
+    pub fn eat(&mut self) {
+        self.size += 1;
+    }
+
+    pub fn get_pos(&self) -> Position {
+        self.pos.clone()
+    }
+
+    pub fn set_pos(&mut self, pos: Position) {
+        self.pos = pos.clone();
+        self.full_size.push_front(pos);
+    }
+
+    pub fn get_size(&self) -> usize {
+        self.size
+    }
+
+    pub fn move_snake(&mut self, direction: &Directions) -> Position {
+        return match direction {
             Directions::UP => {
-                self.y_pos -= 1;
+                Position::new(self.pos.x, self.pos.y - 1)
             },
             Directions::DOWN => {
-                self.y_pos += 1;
+                Position::new(self.pos.x, self.pos.y + 1)
             },
             Directions::LEFT => {
-                self.x_pos -= 1;
+                Position::new(self.pos.x - 1, self.pos.y)
             },
             Directions::RIGHT => {
-                self.x_pos += 1;
+                Position::new(self.pos.x + 1, self.pos.y)
             }
         }
     }
@@ -42,20 +87,6 @@ mod test_snake {
     use crate::snake::*;
 
     fn make_snake() -> Snake {
-        Snake::new()
-    }
-
-    #[test]
-    fn test_move_snake() {
-        let mut snake = make_snake();
-        assert_eq!((0, 0), snake.get_pos());
-        snake.move_snake(Directions::DOWN);
-        assert_eq!((0, 1), snake.get_pos());
-        snake.move_snake(Directions::RIGHT);
-        assert_eq!((1, 1), snake.get_pos());
-        snake.move_snake(Directions::UP);
-        assert_eq!((1, 0), snake.get_pos());
-        snake.move_snake(Directions::LEFT);
-        assert_eq!((0, 0), snake.get_pos());
+        Snake::new(4, 4)
     }
 }

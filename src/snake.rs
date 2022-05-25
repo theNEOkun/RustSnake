@@ -47,8 +47,9 @@ impl Snake {
         }
     }
 
-    pub fn eat(&mut self) {
+    pub fn eat(&mut self) -> bool {
         self.size += 1;
+        true
     }
 
     pub fn get_pos(&self) -> Position {

@@ -23,10 +23,18 @@ use std::{
 
 const MAX_SIZE: usize = 16;
 
-const WALL: &str = " #";
-const EMPTY: &str = "  ";
-const SNAKE: &str = " 0";
-const FRUIT: &str = " %";
+const WALL_Str: &str = " #";
+const EMPTY_Str: &str = "  ";
+const SNAKE_Str: &str = " 0";
+const FRUIT_Str: &str = " %";
+
+#[derive(PartialEq, PartialOrd, Clone)]
+pub enum Items {
+    WALL = 10,
+    EMPTY = 0,
+    SNAKE = 1,
+    FRUIT = 2,
+}
 
 fn print(o_str: &str, mut stdout: &std::io::Stdout) {
 
@@ -40,7 +48,12 @@ fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
     for (x, each) in board.get_vec().iter().enumerate() {
         let mut o_string = String::new();
         for string in each {
-            o_string += string;
+            o_string += match string {
+                Items::WALL => WALL_Str,
+                Items::FRUIT => FRUIT_Str,
+                Items::SNAKE => SNAKE_Str,
+                _ => EMPTY_Str
+            };
         }
         o_string += "\n";
         execute!(stdout, cursor::MoveTo(0, x as u16), Print(o_string))
@@ -59,13 +72,12 @@ fn main() {
 
     let mut board = Board::new(MAX_SIZE, MAX_SIZE);
 
-
     let mut dirr: Directions = Directions::LEFT;
 
     //key detection
     loop {
         let curr_pos = snake.get_pos();
-        board.change_position(&curr_pos, SNAKE);
+        board.change_position(&curr_pos, Items::SNAKE);
         //going to top left corner
         print_board(&board, &stdout);
 
@@ -102,15 +114,15 @@ fn main() {
         sleep(Duration::from_millis(50));
 
         let pos = snake.move_snake(&dirr);
-        if !board.check_position(&pos, EMPTY) {
-            if board.check_position(&pos, FRUIT) {
+        if !board.check_position(&pos, Items::EMPTY) {
+            if board.check_position(&pos, Items::FRUIT) {
                 snake.eat();
             } else {
                 break;
             }
         }
         if let Some(last_pos) = snake.get_back() {
-            board.change_position(&last_pos, EMPTY);
+            board.change_position(&last_pos, Items::EMPTY);
         }
 
         snake.set_pos(pos);

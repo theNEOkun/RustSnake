@@ -28,6 +28,7 @@ const EMPTY_Str: &str = "\x1b[0m\x1b[47m  ";
 const SNAKE_Str: &str = "\x1b[47m\x1b[32m S";
 const FRUIT_Str: &str = "\x1b[47m\x1b[31m %";
 
+///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
 pub enum Items {
     WALL = 10,
@@ -43,6 +44,10 @@ fn print(o_str: &str, mut stdout: &std::io::Stdout) {
         .unwrap();
 }
 
+///used to print the board to the screen
+///
+///board is the board to print
+///stdout is used to print
 fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
     execute!(stdout, Clear(ClearType::All)).unwrap();
     for (x, each) in board.get_vec().iter().enumerate() {
@@ -61,6 +66,9 @@ fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
         }
 }
 
+///Main game loop
+///
+///param max_size is the size of max x and y 
 fn gameloop(max_size: usize) {
     let stdout = stdout();
     //going into raw mode
@@ -151,6 +159,8 @@ fn gameloop(max_size: usize) {
 
 }
 
+//Main-method
+//Takes arguments
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match &args[1][..] {

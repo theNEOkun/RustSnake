@@ -23,10 +23,10 @@ use std::{
 
 const MAX_SIZE: usize = 16;
 
-const WALL_Str: &str = " #";
-const EMPTY_Str: &str = "  ";
-const SNAKE_Str: &str = " 0";
-const FRUIT_Str: &str = " %";
+const WALL_Str: &str = "\x1b[0m\x1b[41m W";
+const EMPTY_Str: &str = "\x1b[0m\x1b[47m  ";
+const SNAKE_Str: &str = "\x1b[47m\x1b[32m S";
+const FRUIT_Str: &str = "\x1b[47m\x1b[31m %";
 
 #[derive(PartialEq, PartialOrd, Clone)]
 pub enum Items {
@@ -55,7 +55,7 @@ fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
                 _ => EMPTY_Str
             };
         }
-        o_string += "\n";
+        o_string += "\n\x1b[0m";
         execute!(stdout, cursor::MoveTo(0, x as u16), Print(o_string))
             .unwrap();
         }
@@ -82,11 +82,6 @@ fn main() {
     loop {
         let curr_pos = snake.get_pos();
         board.change_position(&curr_pos, Items::SNAKE);
-
-        if fruit {
-            board.fruit();
-            fruit = false;
-        }
 
         //going to top left corner
         print_board(&board, &stdout);
@@ -126,8 +121,7 @@ fn main() {
                 }) => if dirr != Directions::UP {
                     dirr = Directions::DOWN
                 },
-                _ => (
-                ),
+                _ => (),
             }
         }
         sleep(Duration::from_millis(50));
@@ -145,6 +139,11 @@ fn main() {
         }
 
         snake.set_pos(pos);
+
+        if fruit {
+            board.fruit();
+            fruit = false;
+        }
     }
 
     //disabling raw mode

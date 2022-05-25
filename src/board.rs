@@ -38,7 +38,12 @@ impl Board {
         let x = self.rng.gen_range(1..(self.max_x-2));
         let y = self.rng.gen_range(1..(self.max_y-2));
 
-        self.change_position(&Position::new(x, y), Items::FRUIT);
+        let fruit_pos = Position::new(x, y);
+        if self.check_position(&fruit_pos, Items::EMPTY) {
+            self.change_position(&fruit_pos, Items::FRUIT);
+        } else {
+            self.fruit()
+        }
     }
 
     pub fn check_position(&self, pos: &Position, ident: Items) -> bool {

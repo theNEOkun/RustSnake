@@ -36,7 +36,7 @@ fn gameloop(mut board: Board) {
         board.change_position(&curr_pos, Items::SNAKE);
 
         //going to top left corner
-        term.print_board(&board.get_vec());
+        term.print_board(board.get_vec());
 
         if let Some(new_dirr) = term.move_snake(dirr) {
             dirr = new_dirr;

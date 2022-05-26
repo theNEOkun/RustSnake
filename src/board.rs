@@ -5,6 +5,11 @@ use rand::{prelude::{
     ThreadRng,
 }, Rng};
 
+use std::ops::{
+    Index,
+    IndexMut
+};
+
 /// Contains the entire board, with interactions with it
 pub struct Board {
     board: Vec<Vec<Items>>,
@@ -84,8 +89,8 @@ impl Board {
     }
 
     /// Returns the underlying vectors
-    pub fn get_vec(&self) -> Vec<Vec<Items>> {
-        self.board.clone()
+    pub fn get_vec(&self) -> &Vec<Vec<Items>> {
+        &self.board
     } 
 }
 
@@ -95,7 +100,7 @@ impl Default for Board {
     }
 }
 
-impl std::ops::Index<&Position> for Board {
+impl Index<&Position> for Board {
     type Output = Items;
 
     fn index(&self, index: &Position) -> &Self::Output {
@@ -103,7 +108,7 @@ impl std::ops::Index<&Position> for Board {
     }
 }
 
-impl std::ops::IndexMut<&Position> for Board {
+impl IndexMut<&Position> for Board {
     fn index_mut(&mut self, index: &Position) -> &mut Self::Output {
         &mut self.board[index.y][index.x]
     }

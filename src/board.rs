@@ -14,7 +14,6 @@ pub struct Board {
 }
 
 impl Board {
-
     /// Creates a new boad, and populates it
     pub fn new(size_x: usize, size_y: usize) -> Self {
         let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
@@ -61,14 +60,14 @@ impl Board {
 
     /// Checks if a position is empty
     pub fn check_position(&self, pos: &Position, ident: Items) -> bool {
-        self.board[pos.y][pos.x] == ident
+        self[pos] == ident
     }
 
     /// Changes a position to another if it is not a wall
     /// Returns true if the position changes, else false
     pub fn change_position(&mut self, pos: &Position, change: Items) -> bool {
         return if !(self.check_position(pos, Items::WALL) || self.check_position(pos, Items::SNAKE)) {
-            self.board[pos.y][pos.x] = change;
+            self[pos] = change;
             true
         } else {
             false
@@ -77,7 +76,7 @@ impl Board {
 
     pub fn remove_position(&mut self, pos: &Position) -> bool {
         return if !self.check_position(pos, Items::WALL){
-            self.board[pos.y][pos.x] = Items::EMPTY;
+            self[pos] = Items::EMPTY;
             true
         } else {
             false
@@ -93,6 +92,20 @@ impl Board {
 impl Default for Board {
     fn default() -> Self {
         Self::new(16, 16)
+    }
+}
+
+impl std::ops::Index<&Position> for Board {
+    type Output = Items;
+
+    fn index(&self, index: &Position) -> &Self::Output {
+        &self.board[index.y][index.x]
+    }
+}
+
+impl std::ops::IndexMut<&Position> for Board {
+    fn index_mut(&mut self, index: &Position) -> &mut Self::Output {
+        &mut self.board[index.y][index.x]
     }
 }
 

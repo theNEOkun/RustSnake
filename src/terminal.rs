@@ -2,7 +2,7 @@ use crossterm::{
     self, cursor,
     event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
-    style::{Color, Print, Stylize, StyledContent},
+    style::{Print, Stylize},
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 use std::{

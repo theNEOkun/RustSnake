@@ -22,6 +22,12 @@ const FRUIT: &str = " %";
 const SNEK: &str = " S";
 const EMPTY: &str = "  ";
 
+enum MoveOpt<T> {
+    Some(T),
+    Same,
+    None
+}
+
 impl Term {
     pub fn new() -> Self {
         enable_raw_mode().unwrap();
@@ -52,37 +58,36 @@ impl Term {
 
 
     /// Method used to move the snake
-    pub fn move_snake(&self, curr_dirr: Directions) -> Option<Directions> {
+    pub fn move_snake(&self, curr_dirr: &Directions) -> MoveOpt<Directions> {
         if poll(Duration::from_millis(100)).unwrap() {
             //matching the key
-            let dirr = match read().unwrap() {
+            return match read().unwrap() {
                 //i think this speaks for itself
                 Event::Key(KeyEvent {
                     code: KeyCode::Char('q'),
                     modifiers: KeyModifiers::NONE,
-                }) => return None,
+                }) => return MoveOpt::None,
                 Event::Key(KeyEvent {
                     code: KeyCode::Left,
                     modifiers: KeyModifiers::NONE,
                     //clearing the screen and printing our message
-                }) => Directions::LEFT,
+                }) => MoveOpt::Some(Directions::LEFT),
                 Event::Key(KeyEvent {
                     code: KeyCode::Right,
                     modifiers: KeyModifiers::NONE,
-                }) => Directions::RIGHT,
+                }) => MoveOpt::Some(Directions::RIGHT),
                 Event::Key(KeyEvent {
                     code: KeyCode::Up,
                     modifiers: KeyModifiers::NONE,
-                }) => Directions::UP,
+                }) => MoveOpt::Some(Directions::UP),
                 Event::Key(KeyEvent {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
-                }) => Directions::DOWN,
-                _ => curr_dirr
+                }) => MoveOpt::Some(Directions::DOWN),
+                _ => MoveOpt::Same
             };
-            return Some(dirr)
         } else {
-            return Some(curr_dirr)
+            return MoveOpt::Same
         }
     }
 }

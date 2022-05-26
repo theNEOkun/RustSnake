@@ -64,8 +64,17 @@ impl Board {
     /// Changes a position to another if it is not a wall
     /// Returns true if the position changes, else false
     pub fn change_position(&mut self, pos: &Position, change: Items) -> bool {
-        return if !self.check_position(pos, Items::WALL) {
+        return if !(self.check_position(pos, Items::WALL) || self.check_position(pos, Items::SNAKE)) {
             self.board[pos.y][pos.x] = change;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn remove_position(&mut self, pos: &Position) -> bool {
+        return if !self.check_position(pos, Items::WALL){
+            self.board[pos.y][pos.x] = Items::EMPTY;
             true
         } else {
             false
@@ -97,14 +106,22 @@ mod board_test {
     #[test]
     fn test_change_position() {
         let mut board = get_board();
-        let pos_1 = Position::new(1, 1);
-        assert!(board.check_position(&pos_1, Items::EMPTY));
-        board.change_position(&pos_1, Items::FRUIT);
-        assert!(board.check_position(&pos_1, Items::FRUIT));
-        let pos_2 = Position::new(0, 0);
-        assert!(board.check_position(&pos_2, Items::WALL));
-        board.change_position(&pos_2, Items::EMPTY);
-        assert!(board.check_position(&pos_2, Items::WALL));
+        let pos = Position::new(1, 1);
+        assert!(board.check_position(&pos, Items::EMPTY));
+        assert!(board.change_position(&pos, Items::FRUIT));
+        assert!(board.check_position(&pos, Items::FRUIT));
+
+        let mut board = get_board();
+        let pos = Position::new(0, 0);
+        assert!(board.check_position(&pos, Items::WALL));
+        assert_eq!(false, board.change_position(&pos, Items::EMPTY));
+        assert!(board.check_position(&pos, Items::WALL));
+
+        let mut board = get_board();
+        let pos = Position::new(1, 1);
+        assert!(board.check_position(&pos, Items::EMPTY));
+        assert!(board.change_position(&pos, Items::SNAKE));
+        assert!(board.check_position(&pos, Items::SNAKE));
     }
 
     #[test]

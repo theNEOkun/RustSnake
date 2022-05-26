@@ -154,7 +154,7 @@ fn gameloop(max_size: usize) {
             }
         }
         if let Some(last_pos) = snake.get_back() {
-            board.change_position(&last_pos, Items::EMPTY);
+            board.remove_position(&last_pos);
         }
 
         snake.set_pos(pos);

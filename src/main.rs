@@ -31,7 +31,6 @@ fn gameloop(mut board: Board) {
 
     board.fruit();
 
-    //key detection
     loop {
         let curr_pos = snake.get_pos();
         board.change_position(&curr_pos, Items::SNAKE);

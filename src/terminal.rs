@@ -2,7 +2,7 @@ use crossterm::{
     self, cursor,
     event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
-    style::Print,
+    style::{Color, Print, Stylize, StyledContent},
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 use std::{
@@ -13,14 +13,14 @@ use std::{
 use crate::Directions;
 use crate::Items;
 
-const WALL_STR: &str = "\x1b[0m\x1b[41m W";
-const EMPTY_STR: &str = "\x1b[0m\x1b[47m  ";
-const SNAKE_STR: &str = "\x1b[47m\x1b[32m S";
-const FRUIT_STR: &str = "\x1b[47m\x1b[31m %";
-
 pub struct Term {
     stdout: Stdout,
 }
+
+const WALL: &str = " W";
+const FRUIT: &str = " %";
+const SNEK: &str = " S";
+const EMPTY: &str = "  ";
 
 impl Term {
     pub fn new() -> Self {
@@ -37,11 +37,11 @@ impl Term {
         for (x, each) in matrix.iter().enumerate() {
             let mut o_string = String::new();
             for string in each {
-                o_string += match string {
-                    Items::WALL => WALL_STR,
-                    Items::FRUIT => FRUIT_STR,
-                    Items::SNAKE => SNAKE_STR,
-                    _ => EMPTY_STR,
+                o_string += &match string {
+                    Items::WALL => WALL.white().on_red().to_string(),
+                    Items::FRUIT => FRUIT.red().on_white().to_string(),
+                    Items::SNAKE => SNEK.green().on_green().to_string(),
+                    _ => EMPTY.white().on_white().to_string(),
                 };
             }
             o_string += "\n\x1b[0m";
@@ -49,15 +49,17 @@ impl Term {
         }
     }
 
+    /// Method used to get the opposite direction of a given direction
     fn opposite(&self, dirr: &Directions) -> Directions {
         return match dirr {
             Directions::LEFT => Directions::RIGHT,
             Directions::RIGHT => Directions::LEFT,
             Directions::UP => Directions::DOWN,
             Directions::DOWN => Directions::UP,
-        }
+        };
     }
 
+    /// Method used to move the snake
     pub fn move_snake(&self, curr_dirr: Directions) -> Option<Directions> {
         if poll(Duration::from_millis(100)).unwrap() {
             //matching the key
@@ -71,36 +73,26 @@ impl Term {
                     code: KeyCode::Left,
                     modifiers: KeyModifiers::NONE,
                     //clearing the screen and printing our message
-                }) => {
-                    Directions::LEFT
-                }
+                }) => Directions::LEFT,
                 Event::Key(KeyEvent {
                     code: KeyCode::Right,
                     modifiers: KeyModifiers::NONE,
-                }) => {
-                    Directions::RIGHT
-                }
+                }) => Directions::RIGHT,
                 Event::Key(KeyEvent {
                     code: KeyCode::Up,
                     modifiers: KeyModifiers::NONE,
-                }) => {
-                    Directions::UP
-                }
+                }) => Directions::UP,
                 Event::Key(KeyEvent {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
-                }) => {
-                    Directions::DOWN
-                },
-                _ => (
-                    return Some(curr_dirr)
-                )
+                }) => Directions::DOWN,
+                _ => (return Some(curr_dirr)),
             };
             return if curr_dirr != self.opposite(&dirr) {
                 Some(dirr)
             } else {
                 Some(curr_dirr)
-            }
+            };
         } else {
             Some(curr_dirr)
         }

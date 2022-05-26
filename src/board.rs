@@ -5,7 +5,7 @@ use rand::{prelude::{
     ThreadRng,
 }, Rng};
 
-///! Contains the entire board, with interactions with it
+/// Contains the entire board, with interactions with it
 pub struct Board {
     board: Vec<Vec<Items>>,
     max_x: usize,
@@ -15,7 +15,7 @@ pub struct Board {
 
 impl Board {
 
-    ///Creates a new boad, and populates it
+    /// Creates a new boad, and populates it
     pub fn new(size_x: usize, size_y: usize) -> Self {
 
         let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
@@ -48,6 +48,8 @@ impl Board {
         true
     }
 
+    /// Used to get a random position on the board, inside the walls
+    /// Returns that random position as a Position-type
     fn get_rand_block(&mut self) -> Position {
         let x = self.rng.gen_range(1..(self.max_x-2));
         let y = self.rng.gen_range(1..(self.max_y-2));
@@ -59,7 +61,8 @@ impl Board {
         self.board[pos.y][pos.x] == ident
     }
 
-    /// Changes a position to another
+    /// Changes a position to another if it is not a wall
+    /// Returns true if the position changes, else false
     pub fn change_position(&mut self, pos: &Position, change: Items) -> bool {
         return if !self.check_position(pos, Items::WALL) {
             self.board[pos.y][pos.x] = change;
@@ -69,7 +72,7 @@ impl Board {
         }
     }
 
-    /// Returns the underlying vector
+    /// Returns the underlying vectors
     pub fn get_vec(&self) -> Vec<Vec<Items>> {
         self.board.clone()
     } 

@@ -30,17 +30,6 @@ pub enum Items {
     FRUIT = 2,
 }
 
-fn print(o_str: &str, mut stdout: &std::io::Stdout) {
-    //clearing the screen, going to top left corner and printing welcoming message
-    execute!(
-        stdout,
-        Clear(ClearType::All),
-        cursor::MoveTo(0, 0),
-        Print(o_str)
-    )
-    .unwrap();
-}
-
 ///used to print the board to the screen
 ///
 ///board is the board to print
@@ -62,6 +51,66 @@ fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
     }
 }
 
+fn move_snake(curr_dirr: Directions) -> Option<Directions> {
+    if poll(Duration::from_millis(100)).unwrap() {
+        //matching the key
+        return match read().unwrap() {
+            //i think this speaks for itself
+            Event::Key(KeyEvent {
+                code: KeyCode::Char('q'),
+                modifiers: KeyModifiers::NONE,
+            }) => None,
+            Event::Key(KeyEvent {
+                code: KeyCode::Left,
+                modifiers: KeyModifiers::NONE,
+                //clearing the screen and printing our message
+            }) => {
+                if curr_dirr != Directions::RIGHT {
+                    Some(Directions::LEFT)
+                } else {
+                    Some(curr_dirr)
+                }
+            }
+            Event::Key(KeyEvent {
+                code: KeyCode::Right,
+                modifiers: KeyModifiers::NONE,
+            }) => {
+                if curr_dirr != Directions::LEFT {
+                    Some(Directions::RIGHT)
+                } else {
+                    Some(curr_dirr)
+                }
+            }
+            Event::Key(KeyEvent {
+                code: KeyCode::Up,
+                modifiers: KeyModifiers::NONE,
+            }) => {
+                if curr_dirr != Directions::DOWN {
+                    Some(Directions::UP)
+                } else {
+                    Some(curr_dirr)
+                }
+            }
+            Event::Key(KeyEvent {
+                code: KeyCode::Down,
+                modifiers: KeyModifiers::NONE,
+            }) => {
+                if curr_dirr != Directions::UP {
+                    Some(Directions::DOWN)
+                } else {
+                    Some(curr_dirr)
+                }
+            }
+            _ => (
+                Some(curr_dirr)
+            ),
+        }
+    } else {
+        Some(curr_dirr)
+    }
+
+}
+
 ///Main game loop
 ///
 ///param max_size is the size of max x and y
@@ -69,8 +118,6 @@ fn gameloop(max_size: usize) {
     let stdout = stdout();
     //going into raw mode
     enable_raw_mode().unwrap();
-
-    print(r#"q to exit"#, &stdout);
 
     let mut snake = Snake::new(max_size, max_size);
 
@@ -90,50 +137,12 @@ fn gameloop(max_size: usize) {
         //going to top left corner
         print_board(&board, &stdout);
 
-        if poll(Duration::from_millis(100)).unwrap() {
-            //matching the key
-            match read().unwrap() {
-                //i think this speaks for itself
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('q'),
-                    modifiers: KeyModifiers::NONE,
-                }) => break,
-                Event::Key(KeyEvent {
-                    code: KeyCode::Left,
-                    modifiers: KeyModifiers::NONE,
-                    //clearing the screen and printing our message
-                }) => {
-                    if dirr != Directions::RIGHT {
-                        dirr = Directions::LEFT
-                    }
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Right,
-                    modifiers: KeyModifiers::NONE,
-                }) => {
-                    if dirr != Directions::LEFT {
-                        dirr = Directions::RIGHT
-                    }
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Up,
-                    modifiers: KeyModifiers::NONE,
-                }) => {
-                    if dirr != Directions::DOWN {
-                        dirr = Directions::UP
-                    }
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Down,
-                    modifiers: KeyModifiers::NONE,
-                }) => {
-                    if dirr != Directions::UP {
-                        dirr = Directions::DOWN
-                    }
-                }
-                _ => (),
-            }
+        if let Some(new_dirr) = move_snake(dirr) {
+            dirr = new_dirr;
+        } else {
+            break;
         }
+
         sleep(Duration::from_millis(50));
 
         let pos = snake.move_snake(&dirr);
@@ -164,11 +173,15 @@ fn gameloop(max_size: usize) {
 //Takes arguments
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    match &args[1][..] {
-        "--size" => {
-            let size: usize = (&args[2][..]).parse().unwrap();
-            gameloop(size);
+    if args.len() > 1 {
+        match &args[1][..] {
+            "--size" => {
+                let size: usize = (&args[2][..]).parse().unwrap();
+                gameloop(size);
+            }
+            _ => gameloop(MAX_SIZE),
         }
-        _ => gameloop(MAX_SIZE),
+    } else {
+        gameloop(MAX_SIZE)
     }
 }

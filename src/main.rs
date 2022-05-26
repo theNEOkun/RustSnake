@@ -1,25 +1,17 @@
 mod board;
 mod snake;
+mod terminal;
 
 use crossterm::{
-    self, cursor,
+    self,
     event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
-    execute,
-    style::Print,
-    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 
 use board::Board;
 use snake::{Directions, Snake};
+use terminal::Term;
 
-use std::{io::stdout, thread::sleep, time::Duration};
-
-const MAX_SIZE: usize = 16;
-
-const WALL_STR: &str = "\x1b[0m\x1b[41m W";
-const EMPTY_STR: &str = "\x1b[0m\x1b[47m  ";
-const SNAKE_STR: &str = "\x1b[47m\x1b[32m S";
-const FRUIT_STR: &str = "\x1b[47m\x1b[31m %";
+use std::{thread::sleep, time::Duration};
 
 ///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
@@ -28,27 +20,6 @@ pub enum Items {
     EMPTY = 0,
     SNAKE = 1,
     FRUIT = 2,
-}
-
-///used to print the board to the screen
-///
-///board is the board to print
-///stdout is used to print
-fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
-    execute!(stdout, Clear(ClearType::All)).unwrap();
-    for (x, each) in board.get_vec().iter().enumerate() {
-        let mut o_string = String::new();
-        for string in each {
-            o_string += match string {
-                Items::WALL => WALL_STR,
-                Items::FRUIT => FRUIT_STR,
-                Items::SNAKE => SNAKE_STR,
-                _ => EMPTY_STR,
-            };
-        }
-        o_string += "\n\x1b[0m";
-        execute!(stdout, cursor::MoveTo(0, x as u16), Print(o_string)).unwrap();
-    }
 }
 
 fn move_snake(curr_dirr: Directions) -> Option<Directions> {
@@ -108,23 +79,18 @@ fn move_snake(curr_dirr: Directions) -> Option<Directions> {
     } else {
         Some(curr_dirr)
     }
-
 }
 
 ///Main game loop
 ///
 ///param max_size is the size of max x and y
-fn gameloop(max_size: usize) {
-    let stdout = stdout();
-    //going into raw mode
-    enable_raw_mode().unwrap();
+fn gameloop(mut board: Board) {
 
-    let mut snake = Snake::new(max_size, max_size);
-
-    let mut board = Board::new(max_size, max_size);
+    let (max_x, max_y) = board.get_max_size();
+    let mut snake = Snake::new(max_x, max_y);
+    let mut term = Term::new();
 
     let mut dirr: Directions = Directions::LEFT;
-
     let mut fruit = false;
 
     board.fruit();
@@ -135,7 +101,7 @@ fn gameloop(max_size: usize) {
         board.change_position(&curr_pos, Items::SNAKE);
 
         //going to top left corner
-        print_board(&board, &stdout);
+        term.print_board(&board.get_vec());
 
         if let Some(new_dirr) = move_snake(dirr) {
             dirr = new_dirr;
@@ -165,8 +131,6 @@ fn gameloop(max_size: usize) {
         }
     }
 
-    //disabling raw mode
-    disable_raw_mode().unwrap();
 }
 
 //Main-method
@@ -177,11 +141,11 @@ fn main() {
         match &args[1][..] {
             "--size" => {
                 let size: usize = (&args[2][..]).parse().unwrap();
-                gameloop(size);
+                gameloop(Board::new(size, size));
             }
-            _ => gameloop(MAX_SIZE),
+            _ => gameloop(Board::default()),
         }
     } else {
-        gameloop(MAX_SIZE)
+        gameloop(Board::default())
     }
 }

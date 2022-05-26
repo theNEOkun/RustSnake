@@ -17,7 +17,6 @@ impl Board {
 
     /// Creates a new boad, and populates it
     pub fn new(size_x: usize, size_y: usize) -> Self {
-
         let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
         for y_pos in 0..board.len() {
             for x_pos in 0..board[y_pos].len() {
@@ -29,12 +28,16 @@ impl Board {
 
             } 
         }
-        Board {
+        Self {
             board,
             max_x: size_x,
             max_y: size_y,
             rng: thread_rng(),
         }
+    }
+
+    pub fn get_max_size(&self) -> (usize, usize) {
+        (self.max_x, self.max_y)
     }
 
     /// Used to set a new fruit on the board
@@ -85,6 +88,12 @@ impl Board {
     pub fn get_vec(&self) -> Vec<Vec<Items>> {
         self.board.clone()
     } 
+}
+
+impl Default for Board {
+    fn default() -> Self {
+        Self::new(16, 16)
+    }
 }
 
 #[cfg(test)]

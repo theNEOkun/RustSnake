@@ -49,58 +49,58 @@ impl Term {
         }
     }
 
+    fn opposite(&self, dirr: &Directions) -> Directions {
+        return match dirr {
+            Directions::LEFT => Directions::RIGHT,
+            Directions::RIGHT => Directions::LEFT,
+            Directions::UP => Directions::DOWN,
+            Directions::DOWN => Directions::UP,
+        }
+    }
+
     pub fn move_snake(&self, curr_dirr: Directions) -> Option<Directions> {
         if poll(Duration::from_millis(100)).unwrap() {
             //matching the key
-            return match read().unwrap() {
+            let dirr = match read().unwrap() {
                 //i think this speaks for itself
                 Event::Key(KeyEvent {
                     code: KeyCode::Char('q'),
                     modifiers: KeyModifiers::NONE,
-                }) => None,
+                }) => return None,
                 Event::Key(KeyEvent {
                     code: KeyCode::Left,
                     modifiers: KeyModifiers::NONE,
                     //clearing the screen and printing our message
                 }) => {
-                    if curr_dirr != Directions::RIGHT {
-                        Some(Directions::LEFT)
-                    } else {
-                        Some(curr_dirr)
-                    }
+                    Directions::LEFT
                 }
                 Event::Key(KeyEvent {
                     code: KeyCode::Right,
                     modifiers: KeyModifiers::NONE,
                 }) => {
-                    if curr_dirr != Directions::LEFT {
-                        Some(Directions::RIGHT)
-                    } else {
-                        Some(curr_dirr)
-                    }
+                    Directions::RIGHT
                 }
                 Event::Key(KeyEvent {
                     code: KeyCode::Up,
                     modifiers: KeyModifiers::NONE,
                 }) => {
-                    if curr_dirr != Directions::DOWN {
-                        Some(Directions::UP)
-                    } else {
-                        Some(curr_dirr)
-                    }
+                    Directions::UP
                 }
                 Event::Key(KeyEvent {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
                 }) => {
-                    if curr_dirr != Directions::UP {
-                        Some(Directions::DOWN)
-                    } else {
-                        Some(curr_dirr)
-                    }
-                }
-                _ => (Some(curr_dirr)),
+                    Directions::DOWN
+                },
+                _ => (
+                    return Some(curr_dirr)
+                )
             };
+            return if curr_dirr != self.opposite(&dirr) {
+                Some(dirr)
+            } else {
+                Some(curr_dirr)
+            }
         } else {
             Some(curr_dirr)
         }

@@ -22,7 +22,7 @@ const FRUIT: &str = " %";
 const SNEK: &str = " S";
 const EMPTY: &str = "  ";
 
-enum MoveOpt<T> {
+pub enum MoveOpt<T> {
     Some(T),
     Same,
     None
@@ -55,10 +55,8 @@ impl Term {
         }
     }
 
-
-
     /// Method used to move the snake
-    pub fn move_snake(&self, curr_dirr: &Directions) -> MoveOpt<Directions> {
+    pub fn move_snake(&self) -> MoveOpt<Directions> {
         if poll(Duration::from_millis(100)).unwrap() {
             //matching the key
             return match read().unwrap() {

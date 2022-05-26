@@ -4,7 +4,10 @@ mod terminal;
 
 use board::Board;
 use snake::{Directions, Snake};
-use terminal::Term;
+use terminal::{
+    Term,
+    MoveOpt
+};
 
 use std::{thread::sleep, time::Duration};
 
@@ -48,14 +51,16 @@ fn gameloop(mut board: Board) {
         //going to top left corner
         term.print_board(board.get_vec());
 
-        if let Some(new_dirr) = term.move_snake(dirr.clone()) {
-            dirr = if dirr == opposite(&new_dirr) {
-                dirr
-            } else {
-                new_dirr
-            };
-        } else {
-            break;
+        match term.move_snake() {
+            MoveOpt::Some(new_dirr) => {
+                dirr = if dirr != opposite(&new_dirr) {
+                    new_dirr
+                } else {
+                    dirr
+                }
+            }
+            MoveOpt::None => break,
+            _ => (),
         }
 
         sleep(Duration::from_millis(50));

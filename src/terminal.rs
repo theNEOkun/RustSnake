@@ -49,15 +49,7 @@ impl Term {
         }
     }
 
-    /// Method used to get the opposite direction of a given direction
-    fn opposite(&self, dirr: &Directions) -> Directions {
-        return match dirr {
-            Directions::LEFT => Directions::RIGHT,
-            Directions::RIGHT => Directions::LEFT,
-            Directions::UP => Directions::DOWN,
-            Directions::DOWN => Directions::UP,
-        };
-    }
+
 
     /// Method used to move the snake
     pub fn move_snake(&self, curr_dirr: Directions) -> Option<Directions> {

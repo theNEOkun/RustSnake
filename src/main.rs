@@ -17,6 +17,16 @@ pub enum Items {
     FRUIT = 2,
 }
 
+/// Method used to get the opposite direction of a given direction
+fn opposite(dirr: &Directions) -> Directions {
+    return match dirr {
+        Directions::LEFT => Directions::RIGHT,
+        Directions::RIGHT => Directions::LEFT,
+        Directions::UP => Directions::DOWN,
+        Directions::DOWN => Directions::UP,
+    };
+}
+
 ///Main game loop
 ///
 ///param max_size is the size of max x and y

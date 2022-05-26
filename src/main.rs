@@ -48,8 +48,12 @@ fn gameloop(mut board: Board) {
         //going to top left corner
         term.print_board(board.get_vec());
 
-        if let Some(new_dirr) = term.move_snake(dirr) {
-            dirr = new_dirr;
+        if let Some(new_dirr) = term.move_snake(dirr.clone()) {
+            dirr = if dirr == opposite(&new_dirr) {
+                dirr
+            } else {
+                new_dirr
+            };
         } else {
             break;
         }

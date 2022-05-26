@@ -78,15 +78,11 @@ impl Term {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
                 }) => Directions::DOWN,
-                _ => (return Some(curr_dirr)),
+                _ => curr_dirr
             };
-            return if curr_dirr != self.opposite(&dirr) {
-                Some(dirr)
-            } else {
-                Some(curr_dirr)
-            };
+            return Some(dirr)
         } else {
-            Some(curr_dirr)
+            return Some(curr_dirr)
         }
     }
 }

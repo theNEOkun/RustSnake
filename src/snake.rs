@@ -8,7 +8,7 @@ pub enum Directions {
     RIGHT
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Position {
     pub x: usize,
     pub y: usize
@@ -62,11 +62,11 @@ impl Snake {
         self.full_size.push_front(pos);
     }
 
-    pub fn get_size(&self) -> usize {
+    pub fn _get_size(&self) -> usize {
         self.size
     }
 
-    pub fn move_snake(&mut self, direction: &Directions) -> Position {
+    pub fn move_snake(&self, direction: &Directions) -> Position {
         return match direction {
             Directions::UP => {
                 Position::new(self.pos.x, self.pos.y - 1)
@@ -90,5 +90,13 @@ mod test_snake {
 
     fn make_snake() -> Snake {
         Snake::new(4, 4)
+    }
+
+    #[test]
+    fn test_get_position() {
+        let mut snake = make_snake();
+        assert_eq!(Position::new(2, 2), snake.get_pos());
+        let new_pos = snake.move_snake(&Directions::DOWN);
+        assert_eq!(Position::new(2, 3), new_pos);
     }
 }

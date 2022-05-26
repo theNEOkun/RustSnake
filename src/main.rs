@@ -1,32 +1,25 @@
-mod snake;
 mod board;
+mod snake;
 
 use crossterm::{
-    self,
+    self, cursor,
+    event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
-    cursor,
-    event::{read, poll, Event, KeyCode, KeyEvent, KeyModifiers},
     style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 
-use snake::{Snake, Directions};
 use board::Board;
+use snake::{Directions, Snake};
 
-use std::{
-    io::{
-        stdout, Write
-    },
-    time::Duration,
-    thread::sleep,
-};
+use std::{io::stdout, thread::sleep, time::Duration};
 
 const MAX_SIZE: usize = 16;
 
-const WALL_Str: &str = "\x1b[0m\x1b[41m W";
-const EMPTY_Str: &str = "\x1b[0m\x1b[47m  ";
-const SNAKE_Str: &str = "\x1b[47m\x1b[32m S";
-const FRUIT_Str: &str = "\x1b[47m\x1b[31m %";
+const WALL_STR: &str = "\x1b[0m\x1b[41m W";
+const EMPTY_STR: &str = "\x1b[0m\x1b[47m  ";
+const SNAKE_STR: &str = "\x1b[47m\x1b[32m S";
+const FRUIT_STR: &str = "\x1b[47m\x1b[31m %";
 
 ///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
@@ -38,10 +31,14 @@ pub enum Items {
 }
 
 fn print(o_str: &str, mut stdout: &std::io::Stdout) {
-
     //clearing the screen, going to top left corner and printing welcoming message
-    execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0), Print(o_str))
-        .unwrap();
+    execute!(
+        stdout,
+        Clear(ClearType::All),
+        cursor::MoveTo(0, 0),
+        Print(o_str)
+    )
+    .unwrap();
 }
 
 ///used to print the board to the screen
@@ -54,21 +51,20 @@ fn print_board(board: &Board, mut stdout: &std::io::Stdout) {
         let mut o_string = String::new();
         for string in each {
             o_string += match string {
-                Items::WALL => WALL_Str,
-                Items::FRUIT => FRUIT_Str,
-                Items::SNAKE => SNAKE_Str,
-                _ => EMPTY_Str
+                Items::WALL => WALL_STR,
+                Items::FRUIT => FRUIT_STR,
+                Items::SNAKE => SNAKE_STR,
+                _ => EMPTY_STR,
             };
         }
         o_string += "\n\x1b[0m";
-        execute!(stdout, cursor::MoveTo(0, x as u16), Print(o_string))
-            .unwrap();
-        }
+        execute!(stdout, cursor::MoveTo(0, x as u16), Print(o_string)).unwrap();
+    }
 }
 
 ///Main game loop
 ///
-///param max_size is the size of max x and y 
+///param max_size is the size of max x and y
 fn gameloop(max_size: usize) {
     let stdout = stdout();
     //going into raw mode
@@ -106,29 +102,35 @@ fn gameloop(max_size: usize) {
                     code: KeyCode::Left,
                     modifiers: KeyModifiers::NONE,
                     //clearing the screen and printing our message
-                }) => if dirr != Directions::RIGHT {
-                    dirr = Directions::LEFT
-                },
+                }) => {
+                    if dirr != Directions::RIGHT {
+                        dirr = Directions::LEFT
+                    }
+                }
                 Event::Key(KeyEvent {
                     code: KeyCode::Right,
                     modifiers: KeyModifiers::NONE,
-                }) =>
-                if dirr != Directions::LEFT {
-                    dirr = Directions::RIGHT
-                },
+                }) => {
+                    if dirr != Directions::LEFT {
+                        dirr = Directions::RIGHT
+                    }
+                }
                 Event::Key(KeyEvent {
                     code: KeyCode::Up,
                     modifiers: KeyModifiers::NONE,
-                }) =>
-                if dirr != Directions::DOWN {
-                    dirr = Directions::UP
-                },
+                }) => {
+                    if dirr != Directions::DOWN {
+                        dirr = Directions::UP
+                    }
+                }
                 Event::Key(KeyEvent {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
-                }) => if dirr != Directions::UP {
-                    dirr = Directions::DOWN
-                },
+                }) => {
+                    if dirr != Directions::UP {
+                        dirr = Directions::DOWN
+                    }
+                }
                 _ => (),
             }
         }
@@ -156,7 +158,6 @@ fn gameloop(max_size: usize) {
 
     //disabling raw mode
     disable_raw_mode().unwrap();
-
 }
 
 //Main-method

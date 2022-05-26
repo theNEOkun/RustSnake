@@ -73,13 +73,14 @@ mod board_test {
     
     use crate::board::*;
 
-    fn getBoard() -> Board {
+    fn get_board() -> Board {
         Board::new(8, 8)
     }
 
     #[test]
     fn test_position() {
-        let board = getBoard();
+        let board = get_board();
         assert!(board.check_position(&Position::new(0, 0), Items::WALL));
+        assert!(board.check_position(&Position::new(1, 1), Items::EMPTY));
     }
 }

@@ -1,11 +1,16 @@
-use std::io::{stdout, Stdout};
 use crossterm::{
     self, cursor,
+    event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
     style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
+use std::{
+    io::{stdout, Stdout},
+    time::Duration,
+};
 
+use crate::Directions;
 use crate::Items;
 
 const WALL_STR: &str = "\x1b[0m\x1b[41m W";
@@ -42,7 +47,63 @@ impl Term {
             o_string += "\n\x1b[0m";
             execute!(self.stdout, cursor::MoveTo(0, x as u16), Print(o_string)).unwrap();
         }
+    }
 
+    pub fn move_snake(&self, curr_dirr: Directions) -> Option<Directions> {
+        if poll(Duration::from_millis(100)).unwrap() {
+            //matching the key
+            return match read().unwrap() {
+                //i think this speaks for itself
+                Event::Key(KeyEvent {
+                    code: KeyCode::Char('q'),
+                    modifiers: KeyModifiers::NONE,
+                }) => None,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Left,
+                    modifiers: KeyModifiers::NONE,
+                    //clearing the screen and printing our message
+                }) => {
+                    if curr_dirr != Directions::RIGHT {
+                        Some(Directions::LEFT)
+                    } else {
+                        Some(curr_dirr)
+                    }
+                }
+                Event::Key(KeyEvent {
+                    code: KeyCode::Right,
+                    modifiers: KeyModifiers::NONE,
+                }) => {
+                    if curr_dirr != Directions::LEFT {
+                        Some(Directions::RIGHT)
+                    } else {
+                        Some(curr_dirr)
+                    }
+                }
+                Event::Key(KeyEvent {
+                    code: KeyCode::Up,
+                    modifiers: KeyModifiers::NONE,
+                }) => {
+                    if curr_dirr != Directions::DOWN {
+                        Some(Directions::UP)
+                    } else {
+                        Some(curr_dirr)
+                    }
+                }
+                Event::Key(KeyEvent {
+                    code: KeyCode::Down,
+                    modifiers: KeyModifiers::NONE,
+                }) => {
+                    if curr_dirr != Directions::UP {
+                        Some(Directions::DOWN)
+                    } else {
+                        Some(curr_dirr)
+                    }
+                }
+                _ => (Some(curr_dirr)),
+            };
+        } else {
+            Some(curr_dirr)
+        }
     }
 }
 

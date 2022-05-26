@@ -2,11 +2,6 @@ mod board;
 mod snake;
 mod terminal;
 
-use crossterm::{
-    self,
-    event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
-};
-
 use board::Board;
 use snake::{Directions, Snake};
 use terminal::Term;
@@ -20,65 +15,6 @@ pub enum Items {
     EMPTY = 0,
     SNAKE = 1,
     FRUIT = 2,
-}
-
-fn move_snake(curr_dirr: Directions) -> Option<Directions> {
-    if poll(Duration::from_millis(100)).unwrap() {
-        //matching the key
-        return match read().unwrap() {
-            //i think this speaks for itself
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('q'),
-                modifiers: KeyModifiers::NONE,
-            }) => None,
-            Event::Key(KeyEvent {
-                code: KeyCode::Left,
-                modifiers: KeyModifiers::NONE,
-                //clearing the screen and printing our message
-            }) => {
-                if curr_dirr != Directions::RIGHT {
-                    Some(Directions::LEFT)
-                } else {
-                    Some(curr_dirr)
-                }
-            }
-            Event::Key(KeyEvent {
-                code: KeyCode::Right,
-                modifiers: KeyModifiers::NONE,
-            }) => {
-                if curr_dirr != Directions::LEFT {
-                    Some(Directions::RIGHT)
-                } else {
-                    Some(curr_dirr)
-                }
-            }
-            Event::Key(KeyEvent {
-                code: KeyCode::Up,
-                modifiers: KeyModifiers::NONE,
-            }) => {
-                if curr_dirr != Directions::DOWN {
-                    Some(Directions::UP)
-                } else {
-                    Some(curr_dirr)
-                }
-            }
-            Event::Key(KeyEvent {
-                code: KeyCode::Down,
-                modifiers: KeyModifiers::NONE,
-            }) => {
-                if curr_dirr != Directions::UP {
-                    Some(Directions::DOWN)
-                } else {
-                    Some(curr_dirr)
-                }
-            }
-            _ => (
-                Some(curr_dirr)
-            ),
-        }
-    } else {
-        Some(curr_dirr)
-    }
 }
 
 ///Main game loop
@@ -103,7 +39,7 @@ fn gameloop(mut board: Board) {
         //going to top left corner
         term.print_board(&board.get_vec());
 
-        if let Some(new_dirr) = move_snake(dirr) {
+        if let Some(new_dirr) = term.move_snake(dirr) {
             dirr = new_dirr;
         } else {
             break;
@@ -130,7 +66,6 @@ fn gameloop(mut board: Board) {
             fruit = false;
         }
     }
-
 }
 
 //Main-method

@@ -94,9 +94,21 @@ mod test_snake {
 
     #[test]
     fn test_get_position() {
-        let mut snake = make_snake();
+        let snake = make_snake();
         assert_eq!(Position::new(2, 2), snake.get_pos());
         let new_pos = snake.move_snake(&Directions::DOWN);
         assert_eq!(Position::new(2, 3), new_pos);
+    }
+
+    #[test]
+    fn test_eat() {
+        let mut snake = make_snake();
+        assert_eq!(4, snake.size);
+        assert!(snake.eat());
+        assert_eq!(5, snake.size);
+        assert!(snake.eat());
+        assert_eq!(6, snake.size);
+        assert!(snake.eat());
+        assert_eq!(7, snake.size);
     }
 }

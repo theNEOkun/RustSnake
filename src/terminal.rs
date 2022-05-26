@@ -40,7 +40,7 @@ impl Term {
                 o_string += &match string {
                     Items::WALL => WALL.white().on_red().to_string(),
                     Items::FRUIT => FRUIT.red().on_white().to_string(),
-                    Items::SNAKE => SNEK.green().on_green().to_string(),
+                    Items::SNAKE => SNEK.black().on_green().to_string(),
                     _ => EMPTY.white().on_white().to_string(),
                 };
             }

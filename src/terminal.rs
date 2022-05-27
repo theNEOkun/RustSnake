@@ -43,9 +43,9 @@ pub struct Term {
 impl Term {
     pub fn new(board_size: (usize, usize)) -> Self {
         let backend = CrosstermBackend::new(stdout());
-            let board_width = (board_size.0 * 2 + 3) as u16;
-            let board_height = (board_size.1 + 2) as u16;
-            let board_size = (board_width, board_height);
+        let board_width = (board_size.0 * 2 + 3) as u16;
+        let board_height = (board_size.1 + 2) as u16;
+        let board_size = (board_width, board_height);
         let term = Term {
             stdout: stdout(),
             terminal: Terminal::new(backend).unwrap(),
@@ -59,17 +59,17 @@ impl Term {
     pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>) {
         self.terminal.draw(|f| {
             let board = Rect {
-                    x: 0,
-                    y: 0,
-                    width: self.board_size.0,
-                    height: self.board_size.1,
-                };
+                x: 0,
+                y: 0,
+                width: self.board_size.0,
+                height: self.board_size.1,
+            };
             let stats_rect = Rect {
-                    x: self.board_size.0 + 1,
-                    y: 0,
-                    width: self.board_size.0,
-                    height: self.board_size.1,
-                };
+                x: self.board_size.0 + 1,
+                y: 0,
+                width: self.board_size.0,
+                height: self.board_size.1,
+            };
             print_board(matrix, f, board);
             print_stats(stats, f, stats_rect);
         }).unwrap();
@@ -124,8 +124,8 @@ fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chu
         .block(Block::default().title("stats")
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded));
-    let chunk = Rect::new(chunk.x, chunk.y, (stats[0].len() + 4) as u16, chunk.height);
-    f.render_widget(text, chunk);
+            let chunk = Rect::new(chunk.x, chunk.y, (stats[0].len() + 4) as u16, chunk.height);
+            f.render_widget(text, chunk);
 }
 
 ///used to print the board to the screen
@@ -149,5 +149,5 @@ fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, f: &mut Frame
     let text = Paragraph::new(rows).block(Block::default().title("Snake")
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded));
-    f.render_widget(text, chunk)
+        f.render_widget(text, chunk)
 }

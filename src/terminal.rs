@@ -1,10 +1,19 @@
 use crossterm::{
-    self, cursor,
+    self,
     event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
-    style::{Print, Stylize},
-    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+
+use tui::{
+    backend::CrosstermBackend,
+    layout::Rect ,
+    style::{Color, Style},
+    widgets::{Block, Paragraph},
+    text::{Span, Spans},
+    Terminal,
+};
+
 use std::{
     io::{stdout, Stdout},
     time::Duration,
@@ -12,10 +21,6 @@ use std::{
 
 use crate::Directions;
 use crate::Items;
-
-pub struct Term {
-    stdout: Stdout,
-}
 
 const WALL: &str = " W";
 const FRUIT: &str = " %";
@@ -25,13 +30,31 @@ const EMPTY: &str = "  ";
 pub enum MoveOpt<T> {
     Some(T),
     Same,
-    None
+    None,
+}
+
+pub struct Term {
+    stdout: Stdout,
+    terminal: Terminal<CrosstermBackend<Stdout>>,
+    rect: Rect,
 }
 
 impl Term {
-    pub fn new() -> Self {
+    pub fn new(size_x: usize, size_y: usize) -> Self {
+        let backend = CrosstermBackend::new(stdout());
+        let term = Term {
+            stdout: stdout(),
+            terminal: Terminal::new(backend).unwrap(),
+            rect: Rect {
+                x: 0,
+                y: 0,
+                width: (size_x * 2) as u16,
+                height: (size_y + 2) as u16
+            }
+        };
         enable_raw_mode().unwrap();
-        Term { stdout: stdout() }
+        execute!(&term.stdout, EnterAlternateScreen).unwrap();
+        term
     }
 
     ///used to print the board to the screen
@@ -39,20 +62,25 @@ impl Term {
     ///board is the board to print
     ///stdout is used to print
     pub fn print_board(&mut self, matrix: &Vec<Vec<Items>>) {
-        execute!(self.stdout, Clear(ClearType::All)).unwrap();
-        for (x, each) in matrix.iter().enumerate() {
-            let mut o_string = String::new();
-            for string in each {
-                o_string += &match string {
-                    Items::WALL => WALL.white().on_red().to_string(),
-                    Items::FRUIT => FRUIT.red().on_white().to_string(),
-                    Items::SNAKE => SNEK.black().on_green().to_string(),
-                    _ => EMPTY.white().on_white().to_string(),
-                };
+        let mut rows = vec![];
+        for each in matrix {
+            let mut cell_row = vec![];
+            for cell in each {
+                cell_row.push(match cell {
+                    Items::WALL => Span::styled(WALL, Style::default().bg(Color::Black)),
+                    Items::FRUIT => Span::styled(FRUIT, Style::default().bg(Color::Red)),
+                    Items::SNAKE => Span::styled(SNEK, Style::default().bg(Color::Green)),
+                    _ => Span::from(EMPTY),
+                });
             }
-            o_string += "\n\x1b[0m";
-            execute!(self.stdout, cursor::MoveTo(0, x as u16), Print(o_string)).unwrap();
+            rows.push(Spans::from(cell_row));
         }
+        self.terminal
+            .draw(|f| {
+                let table = Paragraph::new(rows).block(Block::default().title("Snake"));
+                f.render_widget(table, self.rect);
+            })
+            .unwrap();
     }
 
     /// Method used to move the snake
@@ -82,10 +110,10 @@ impl Term {
                     code: KeyCode::Down,
                     modifiers: KeyModifiers::NONE,
                 }) => MoveOpt::Some(Directions::DOWN),
-                _ => MoveOpt::Same
+                _ => MoveOpt::Same,
             };
         } else {
-            return MoveOpt::Same
+            return MoveOpt::Same;
         }
     }
 }
@@ -93,5 +121,6 @@ impl Term {
 impl Drop for Term {
     fn drop(&mut self) {
         disable_raw_mode().unwrap();
+        execute!(self.terminal.backend_mut(), LeaveAlternateScreen).unwrap();
     }
 }

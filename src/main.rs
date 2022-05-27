@@ -37,7 +37,7 @@ fn gameloop(mut board: Board) {
 
     let (max_x, max_y) = board.get_max_size();
     let mut snake = Snake::new(max_x, max_y);
-    let mut term = Term::new();
+    let mut term = Term::new(max_x, max_y);
 
     let mut dirr: Directions = Directions::LEFT;
     let mut fruit = false;

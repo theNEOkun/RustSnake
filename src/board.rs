@@ -77,12 +77,18 @@ impl Board {
     /// Used to set a new fruit on the board
     ///
     /// Checks if a position is empty first
-    pub fn fruit(&mut self, fruit: &Items) -> Position {
+    pub fn fruit(&mut self) -> Position {
         let mut fruit_pos = self.get_rand_block();
         while !self.check_position(&fruit_pos, &Items::EMPTY) {
             fruit_pos = self.get_rand_block();
         }
         fruit_pos
+    }
+
+    pub fn set_fruit(&mut self, pos: &Option<Position>, fruit: &Items) {
+        if let Some(position) = pos {
+            self[position] = fruit.clone();
+        }
     }
 
     /// Used to get a random position on the board, inside the walls
@@ -155,6 +161,20 @@ impl Index<&Position> for Board {
 
 impl IndexMut<&Position> for Board {
     fn index_mut(&mut self, index: &Position) -> &mut Self::Output {
+        &mut self.board[index.y as usize][index.x as usize]
+    }
+}
+
+impl Index<Position> for Board {
+    type Output = Items;
+
+    fn index(&self, index: Position) -> &Self::Output {
+        &self.board[index.y as usize][index.x as usize]
+    }
+}
+
+impl IndexMut<Position> for Board {
+    fn index_mut(&mut self, index: Position) -> &mut Self::Output {
         &mut self.board[index.y as usize][index.x as usize]
     }
 }

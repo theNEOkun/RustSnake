@@ -91,7 +91,7 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    board.fruit(player.fruit());
+    player.set_fruit(board.fruit());
 
     let survival_time = Instant::now();
     loop {
@@ -118,11 +118,13 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
                 _ => (),
             }
         }
+        let (p_fruit, p_pos) = player.fruit();
+        board.set_fruit(p_pos, p_fruit);
 
         match player.move_snake(&mut board) {
-            snake::Happen::Some(_) => board.fruit(player.fruit()),
+            snake::Happen::Some(_) => player.set_fruit(board.fruit()),
             snake::Happen::Break => break,
-            _ => false,
+            _ => (),
         };
 
         if let Some(last_pos) = player.get_back() {
@@ -140,8 +142,8 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    board.fruit(player_one.fruit());
-    board.fruit(player_two.fruit());
+    player_one.set_fruit(board.fruit());
+    player_two.set_fruit(board.fruit());
 
     let survival_time = Instant::now();
     loop {
@@ -175,16 +177,21 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
             }
         }
 
+        let (p_fruit, p_pos) = player_one.fruit();
+        board.set_fruit(p_pos, p_fruit);
+        let (p_fruit, p_pos) = player_two.fruit();
+        board.set_fruit(p_pos, p_fruit);
+
         match player_one.move_snake(&mut board) {
             snake::Happen::Some(_) => player_one.set_fruit(board.fruit()),
             snake::Happen::Break => break,
-            _ => false,
+            _ => (),
         };
 
         match player_two.move_snake(&mut board) {
             snake::Happen::Some(_) => player_two.set_fruit(board.fruit()),
             snake::Happen::Break => break,
-            _ => false,
+            _ => (),
         };
 
         if let Some(last_pos) = player_one.get_back() {

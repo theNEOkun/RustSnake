@@ -94,8 +94,8 @@ impl Snake {
         true
     }
 
-    pub fn fruit(&self) -> &Items {
-        &self.fruit
+    pub fn fruit(&self) -> (&Items, &Option<Position>) {
+        (&self.fruit, &self.fruit_pos)
     }
 
     pub fn set_fruit(&mut self, fruit_pos: Position) {
@@ -128,7 +128,7 @@ impl Snake {
         };
         let pos = board.get_overflow_pos(pos);
         return if !board.check_position(&pos, &Items::WALL) {
-            if board.check_position(&pos, self.fruit()) {
+            if board.check_position(&pos, &self.fruit) {
                 self.set_pos(pos);
                 Happen::Some(self.eat())
             } else {

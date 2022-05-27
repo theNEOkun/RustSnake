@@ -86,7 +86,7 @@ fn gameloop(mut board: Board) {
             _ => (),
         }
 
-        sleep(Duration::from_millis(50));
+        sleep(Duration::from_millis(20));
 
         let pos = snake.move_snake(&dirr);
         let pos = board.get_overflow_pos(pos);

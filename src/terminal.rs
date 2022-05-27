@@ -8,12 +8,7 @@ use crossterm::{
 use tui::{
     Frame,
     backend::CrosstermBackend,
-    layout::{
-        Layout,
-        Constraint,
-        Rect,
-        Direction,
-    } ,
+    layout::Rect,
     style::{Color, Style},
     widgets::{Block, Paragraph, List, ListItem, BorderType, Borders},
     text::{Span, Spans},

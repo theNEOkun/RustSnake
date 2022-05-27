@@ -37,7 +37,7 @@ fn gameloop(mut board: Board) {
 
     let (max_x, max_y) = board.get_max_size();
     let mut snake = Snake::new(max_x, max_y);
-    let mut term = Term::new(max_x, max_y);
+    let mut term = Term::new();
 
     let mut dirr: Directions = Directions::LEFT;
     let mut fruit = false;
@@ -49,7 +49,7 @@ fn gameloop(mut board: Board) {
         board.change_position(&curr_pos, Items::SNAKE);
 
         //going to top left corner
-        term.print_board(board.get_vec());
+        term.render(board.get_vec());
 
         match term.move_snake() {
             MoveOpt::Some(new_dirr) => {

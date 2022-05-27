@@ -6,8 +6,13 @@ use crossterm::{
 };
 
 use tui::{
+    Frame,
     backend::CrosstermBackend,
-    layout::Rect ,
+    layout::{
+        Layout,
+        Constraint,
+        Rect
+    } ,
     style::{Color, Style},
     widgets::{Block, Paragraph},
     text::{Span, Spans},
@@ -36,51 +41,30 @@ pub enum MoveOpt<T> {
 pub struct Term {
     stdout: Stdout,
     terminal: Terminal<CrosstermBackend<Stdout>>,
-    rect: Rect,
 }
 
 impl Term {
-    pub fn new(size_x: usize, size_y: usize) -> Self {
+    pub fn new() -> Self {
         let backend = CrosstermBackend::new(stdout());
         let term = Term {
             stdout: stdout(),
             terminal: Terminal::new(backend).unwrap(),
-            rect: Rect {
-                x: 0,
-                y: 0,
-                width: (size_x * 2) as u16,
-                height: (size_y + 2) as u16
-            }
         };
         enable_raw_mode().unwrap();
         execute!(&term.stdout, EnterAlternateScreen).unwrap();
         term
     }
 
-    ///used to print the board to the screen
-    ///
-    ///board is the board to print
-    ///stdout is used to print
-    pub fn print_board(&mut self, matrix: &Vec<Vec<Items>>) {
-        let mut rows = vec![];
-        for each in matrix {
-            let mut cell_row = vec![];
-            for cell in each {
-                cell_row.push(match cell {
-                    Items::WALL => Span::styled(WALL, Style::default().bg(Color::Black)),
-                    Items::FRUIT => Span::styled(FRUIT, Style::default().bg(Color::Red)),
-                    Items::SNAKE => Span::styled(SNEK, Style::default().bg(Color::Green)),
-                    _ => Span::from(EMPTY),
-                });
-            }
-            rows.push(Spans::from(cell_row));
-        }
-        self.terminal
-            .draw(|f| {
-                let table = Paragraph::new(rows).block(Block::default().title("Snake"));
-                f.render_widget(table, self.rect);
-            })
-            .unwrap();
+
+
+    pub fn render(&mut self, matrix:  &Vec<Vec<Items>>) {
+        self.terminal.draw(|f| {
+            let chunks = Layout::default().constraints([
+                Constraint::Percentage(75),
+                Constraint::Percentage(25)
+            ]).split(f.size());
+            print_board(matrix, f, chunks[0]);
+        }).unwrap();
     }
 
     /// Method used to move the snake
@@ -123,4 +107,26 @@ impl Drop for Term {
         disable_raw_mode().unwrap();
         execute!(self.terminal.backend_mut(), LeaveAlternateScreen).unwrap();
     }
+}
+
+///used to print the board to the screen
+///
+///board is the board to print
+///stdout is used to print
+fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, f: &mut Frame<B>, chunk: Rect) {
+    let mut rows = vec![];
+    for each in matrix {
+        let mut cell_row = vec![];
+        for cell in each {
+            cell_row.push(match cell {
+                Items::WALL => Span::styled(WALL, Style::default().bg(Color::Gray)),
+                Items::FRUIT => Span::styled(FRUIT, Style::default().bg(Color::Red)),
+                Items::SNAKE => Span::styled(SNEK, Style::default().bg(Color::Green)),
+                _ => Span::from(EMPTY),
+            });
+        }
+        rows.push(Spans::from(cell_row));
+    }
+    let text = Paragraph::new(rows).block(Block::default().title("Snake"));
+    f.render_widget(text, chunk)
 }

@@ -52,11 +52,12 @@ fn gameloop(mut board: Board) {
         board.change_position(&curr_pos, Items::SNAKE);
 
         //going to top left corner
+        let secs = survival_time.elapsed().as_secs();
+        let mins = secs/60;
         term.render(board.get_vec(), vec![
             &format!("Size of the snake: {}", snake._get_size()),
             &format!("Number of fruits eaten: {}", snake._get_size() - 4),
-            &format!("Time elapsed: {}", survival_time.elapsed().as_secs()),
-            &format!("Snake pos {}", snake.get_pos()),
+            &format!("Time elapsed: {}:{}", mins, secs),
         ]);
 
         match term.move_snake() {

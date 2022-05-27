@@ -71,7 +71,7 @@ impl Term {
                 height: self.board_size.1,
             };
             print_board(matrix, f, board);
-            //print_stats(stats, f, stats_rect);
+            print_stats(stats, f, stats_rect);
         }).unwrap();
     }
 }
@@ -108,6 +108,7 @@ fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, f: &mut Frame
                 Items::FRUIT => Span::styled(FRUIT, Style::default().bg(Color::Red)),
                 Items::SNAKE => Span::styled(SNEK, Style::default().bg(Color::Green)),
                 Items::OSNAKE => Span::styled(SNEK, Style::default().bg(Color::Yellow)),
+                Items::OFRUIT => Span::styled(FRUIT, Style::default().bg(Color::Blue)),
                 _ => Span::from(EMPTY),
             });
         }

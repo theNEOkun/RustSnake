@@ -77,9 +77,9 @@ impl Board {
     /// Used to set a new fruit on the board
     ///
     /// Checks if a position is empty first
-    pub fn fruit(&mut self) -> bool {
+    pub fn fruit(&mut self, fruit: &Items) -> bool {
         let mut fruit_pos = self.get_rand_block();
-        while !self.change_position(&fruit_pos, Items::FRUIT) {
+        while !self.change_position(&fruit_pos, fruit.clone()) {
             fruit_pos = self.get_rand_block();
         }
         true
@@ -94,14 +94,14 @@ impl Board {
     } 
 
     /// Checks if a position is empty
-    pub fn check_position(&self, pos: &Position, ident: Items) -> bool {
-        self[pos] == ident
+    pub fn check_position(&self, pos: &Position, ident: &Items) -> bool {
+        self[pos] == *ident
     }
 
     /// Changes a position to another if it is not a wall
     /// Returns true if the position changes, else false
     pub fn change_position(&mut self, pos: &Position, change: Items) -> bool {
-        return if !(self.check_position(pos, Items::WALL) || self.check_position(pos, Items::SNAKE)) {
+        return if !(self.check_position(pos, &Items::WALL) || self.check_position(pos, &Items::SNAKE)) {
             self[pos] = change;
             true
         } else {
@@ -110,7 +110,7 @@ impl Board {
     }
 
     pub fn remove_position(&mut self, pos: &Position) -> bool {
-        return if !self.check_position(pos, Items::WALL){
+        return if !self.check_position(pos, &Items::WALL){
             self[pos] = Items::EMPTY;
             true
         } else {
@@ -171,29 +171,29 @@ mod board_test {
     #[test]
     fn test_position() {
         let board = get_board();
-        assert!(board.check_position(&Position::new(0, 0), Items::WALL));
-        assert!(board.check_position(&Position::new(1, 1), Items::EMPTY));
+        assert!(board.check_position(&Position::new(0, 0), &Items::WALL));
+        assert!(board.check_position(&Position::new(1, 1), &Items::EMPTY));
     }
 
     #[test]
     fn test_change_position() {
         let mut board = get_board();
         let pos = Position::new(1, 1);
-        assert!(board.check_position(&pos, Items::EMPTY));
+        assert!(board.check_position(&pos, &Items::EMPTY));
         assert!(board.change_position(&pos, Items::FRUIT));
-        assert!(board.check_position(&pos, Items::FRUIT));
+        assert!(board.check_position(&pos, &Items::FRUIT));
 
         let mut board = get_board();
         let pos = Position::new(0, 0);
-        assert!(board.check_position(&pos, Items::WALL));
+        assert!(board.check_position(&pos, &Items::WALL));
         assert_eq!(false, board.change_position(&pos, Items::EMPTY));
-        assert!(board.check_position(&pos, Items::WALL));
+        assert!(board.check_position(&pos, &Items::WALL));
 
         let mut board = get_board();
         let pos = Position::new(1, 1);
-        assert!(board.check_position(&pos, Items::EMPTY));
+        assert!(board.check_position(&pos, &Items::EMPTY));
         assert!(board.change_position(&pos, Items::SNAKE));
-        assert!(board.check_position(&pos, Items::SNAKE));
+        assert!(board.check_position(&pos, &Items::SNAKE));
     }
 
     #[test]

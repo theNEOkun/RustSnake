@@ -91,19 +91,19 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    board.fruit();
+    board.fruit(player.fruit());
 
     let survival_time = Instant::now();
     loop {
         let curr_pos = player.get_pos();
-        board.change_position(&curr_pos, Items::SNAKE);
+        board.change_position(&curr_pos, player.get_items());
 
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
         let mins = secs/60;
         term.render(board.get_vec(), vec![
-            &format!("Size of the snake 1: {}", player._get_size()),
-            &format!("Fruits eaten 1: {}", player._get_size() - 4),
+            &format!("Size of the snake: {}", player._get_size()),
+            &format!("Fruits eaten: {}", player._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
         ]);
 
@@ -120,7 +120,7 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
         }
 
         match player.move_snake(&mut board) {
-            snake::Happen::Some(_) => board.fruit(),
+            snake::Happen::Some(_) => board.fruit(player.fruit()),
             snake::Happen::Break => break,
             _ => false,
         };
@@ -140,15 +140,16 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    board.fruit();
+    board.fruit(player_one.fruit());
+    board.fruit(player_two.fruit());
 
     let survival_time = Instant::now();
     loop {
         let curr_pos_1 = player_one.get_pos();
-        board.change_position(&curr_pos_1, Items::SNAKE);
+        board.change_position(&curr_pos_1, player_one.get_items());
 
         let curr_pos_2 = player_two.get_pos();
-        board.change_position(&curr_pos_2, Items::OSNAKE);
+        board.change_position(&curr_pos_2, player_two.get_items());
 
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
@@ -175,13 +176,13 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
         }
 
         match player_one.move_snake(&mut board) {
-            snake::Happen::Some(_) => board.fruit(),
+            snake::Happen::Some(_) => board.fruit(player_one.fruit()),
             snake::Happen::Break => break,
             _ => false,
         };
 
         match player_two.move_snake(&mut board) {
-            snake::Happen::Some(_) => board.fruit(),
+            snake::Happen::Some(_) => board.fruit(player_two.fruit()),
             snake::Happen::Break => break,
             _ => false,
         };
@@ -213,11 +214,13 @@ fn main() {
         Snake::new(
             snake::Position::new((size_x/2) as isize,  (size_y/2) as isize),
             Items::SNAKE,
+            Items::FRUIT,
             get_player_one
         ),
         Snake::new(
             snake::Position::new((size_x/2) as isize, (size_y/2) as isize),
             Items::OSNAKE,
+            Items::OFRUIT,
             get_player_two
         )
         );
@@ -226,6 +229,7 @@ fn main() {
         Snake::new(
             snake::Position::new((size_x/2) as isize,  (size_y/2) as isize),
             Items::SNAKE,
+            Items::FRUIT,
             get_player_one
         ));
     };

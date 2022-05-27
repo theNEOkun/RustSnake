@@ -1,27 +1,21 @@
-use std::{
-    collections::VecDeque,
-    fmt::Display,
-    time::Duration,
-};
+use std::{collections::VecDeque, fmt::Display};
 
-use crossterm::event::{
-    poll, read, Event
-};
+use crossterm::event::Event;
 
-use crate::{terminal::MoveOpt, board::Board, Items};
+use crate::{board::Board, terminal::MoveOpt, Items};
 
 #[derive(PartialEq, PartialOrd, Clone)]
 pub enum Directions {
     UP,
     DOWN,
     LEFT,
-    RIGHT
+    RIGHT,
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Position {
     pub x: isize,
-    pub y: isize
+    pub y: isize,
 }
 
 impl Display for Position {
@@ -32,16 +26,14 @@ impl Display for Position {
 
 impl Position {
     pub fn new(x: isize, y: isize) -> Self {
-        Position {
-            x, y
-        }
+        Position { x, y }
     }
 }
 
 pub enum Happen<T> {
     Some(T),
     Break,
-    None
+    None,
 }
 
 pub struct Snake {
@@ -50,12 +42,18 @@ pub struct Snake {
     size: usize,
     keys: fn(Event) -> MoveOpt<Directions>,
     dirr: Directions,
-    item: Items
+    item: Items,
+    fruit: Items,
 }
 
 impl Snake {
     /// Creates a new [`Snake`].
-    pub fn new(start_pos: Position, item: Items, keys: fn(Event) -> MoveOpt<Directions>) -> Self {
+    pub fn new(
+        start_pos: Position,
+        item: Items,
+        fruit: Items,
+        keys: fn(Event) -> MoveOpt<Directions>,
+    ) -> Self {
         let mut full_size = VecDeque::new();
         full_size.push_front(start_pos.clone());
         Snake {
@@ -65,6 +63,7 @@ impl Snake {
             keys,
             dirr: Directions::LEFT,
             item,
+            fruit,
         }
     }
 
@@ -73,7 +72,7 @@ impl Snake {
             Some(self.full_size.pop_back().unwrap())
         } else {
             None
-        }
+        };
     }
 
     pub fn mover(&mut self, read: Event) {
@@ -93,6 +92,10 @@ impl Snake {
         true
     }
 
+    pub fn fruit(&self) -> &Items {
+        &self.fruit
+    }
+
     pub fn get_pos(&self) -> Position {
         self.pos.clone()
     }
@@ -106,28 +109,20 @@ impl Snake {
         self.size
     }
 
-    pub fn get_items(&self) -> &Items {
-        &self.item
-    } 
+    pub fn get_items(&self) -> Items {
+        self.item.clone()
+    }
 
     pub fn move_snake(&mut self, board: &mut Board) -> Happen<bool> {
         let pos = match self.dirr {
-            Directions::UP => {
-                Position::new(self.pos.x, self.pos.y - 1)
-            },
-            Directions::DOWN => {
-                Position::new(self.pos.x, self.pos.y + 1)
-            },
-            Directions::LEFT => {
-                Position::new(self.pos.x - 1, self.pos.y)
-            },
-            Directions::RIGHT => {
-                Position::new(self.pos.x + 1, self.pos.y)
-            }
+            Directions::UP => Position::new(self.pos.x, self.pos.y - 1),
+            Directions::DOWN => Position::new(self.pos.x, self.pos.y + 1),
+            Directions::LEFT => Position::new(self.pos.x - 1, self.pos.y),
+            Directions::RIGHT => Position::new(self.pos.x + 1, self.pos.y),
         };
         let pos = board.get_overflow_pos(pos);
-        return if !board.check_position(&pos, Items::EMPTY) {
-            if board.check_position(&pos, Items::FRUIT) {
+        return if !board.check_position(&pos, &Items::EMPTY) {
+            if board.check_position(&pos, self.fruit()) {
                 self.set_pos(pos);
                 Happen::Some(self.eat())
             } else {

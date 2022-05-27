@@ -1,4 +1,7 @@
-use std::collections::VecDeque;
+use std::{
+collections::VecDeque,
+fmt::Display,
+};
 
 #[derive(PartialEq, PartialOrd, Clone)]
 pub enum Directions {
@@ -10,12 +13,18 @@ pub enum Directions {
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Position {
-    pub x: usize,
-    pub y: usize
+    pub x: isize,
+    pub y: isize
+}
+
+impl Display for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}: {})", self.x, self.y)
+    }
 }
 
 impl Position {
-    pub fn new(x: usize, y: usize) -> Self {
+    pub fn new(x: isize, y: isize) -> Self {
         Position {
             x, y
         }
@@ -89,7 +98,7 @@ mod test_snake {
     use crate::snake::*;
 
     fn make_snake() -> Snake {
-        Snake::new(4, 4)
+        Snake::new(Position::new(4, 4))
     }
 
     #[test]

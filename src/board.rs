@@ -18,20 +18,48 @@ pub struct Board {
     rng: ThreadRng,
 }
 
-impl Board {
-    /// Creates a new boad, and populates it
-    pub fn new(size_x: usize, size_y: usize) -> Self {
-        let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
-        for y_pos in 0..board.len() {
-            for x_pos in 0..board[y_pos].len() {
-                if x_pos == (size_x - 1) || x_pos == 0 {
-                    board[y_pos][x_pos] = Items::WALL;
-                } else if y_pos == (size_y-1) || y_pos == 0 {
+/// Used to get a board where there are no gaps in the walls
+fn board_ngates(size_x: usize, size_y: usize) -> Vec<Vec<Items>>  {
+    let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
+    for y_pos in 0..board.len() {
+        for x_pos in 0..board[y_pos].len() {
+            if x_pos == (size_x - 1) || x_pos == 0 {
+                board[y_pos][x_pos] = Items::WALL;
+            } else if y_pos == (size_y-1) || y_pos == 0 {
+                board[y_pos][x_pos] = Items::WALL;
+            }
+        } 
+    }
+    board
+}
+
+/// Used to get a board where there are gaps in the walls
+fn board_gates(size_x: usize, size_y: usize) -> Vec<Vec<Items>> {
+    let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
+    for y_pos in 0..board.len() {
+        for x_pos in 0..board[y_pos].len() {
+            if x_pos == (size_x - 1) || x_pos == 0 {
+                if y_pos > ((size_y/2) + 2) || y_pos < ((size_y/2) - 2) {
                     board[y_pos][x_pos] = Items::WALL;
                 }
-
-            } 
+            } else if y_pos == (size_y-1) || y_pos == 0 {
+                if x_pos > ((size_x/2) + 2) || x_pos < ((size_x/2) - 2) {
+                    board[y_pos][x_pos] = Items::WALL;
+                }
+            }
         }
+    }
+    board
+}
+
+impl Board {
+    /// Creates a new boad, and populates it
+    pub fn new(size_x: usize, size_y: usize, gates: bool) -> Self {
+        let board = if gates {
+            board_gates(size_x, size_y)
+        } else {
+            board_ngates(size_x, size_y)
+        };
         Self {
             board,
             max_x: size_x,
@@ -58,8 +86,8 @@ impl Board {
     /// Used to get a random position on the board, inside the walls
     /// Returns that random position as a Position-type
     fn get_rand_block(&mut self) -> Position {
-        let x = self.rng.gen_range(1..(self.max_x-2));
-        let y = self.rng.gen_range(1..(self.max_y-2));
+        let x = self.rng.gen_range(1..(self.max_x-2)) as isize;
+        let y = self.rng.gen_range(1..(self.max_y-2)) as isize;
         Position::new(x, y)
     } 
 
@@ -90,14 +118,14 @@ impl Board {
 
     /// Used to get a position that overflows the board
     pub fn get_overflow_pos(&mut self, pos: Position) -> Position {
-        return if pos.x >= self.max_x {
+        return if pos.x == (self.max_x as isize) {
             Position::new(0, pos.y)
-        } else if pos.y >= self.max_y {
+        } else if pos.y == (self.max_y as isize) {
             Position::new(pos.x, 0)
-        } else if pos.x == 0 {
-            Position::new(self.max_x - 1, pos.y)
-        } else if pos.y == 0 {
-            Position::new(pos.x, self.max_y - 1)
+        } else if pos.x < 0 {
+            Position::new((self.max_x - 1) as isize, pos.y)
+        } else if pos.y < 0 {
+            Position::new(pos.x, (self.max_y - 1) as isize)
         } else {
             pos
         }
@@ -111,7 +139,7 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self::new(16, 16)
+        Self::new(16, 16, true)
     }
 }
 
@@ -119,13 +147,13 @@ impl Index<&Position> for Board {
     type Output = Items;
 
     fn index(&self, index: &Position) -> &Self::Output {
-        &self.board[index.y][index.x]
+        &self.board[index.y as usize][index.x as usize]
     }
 }
 
 impl IndexMut<&Position> for Board {
     fn index_mut(&mut self, index: &Position) -> &mut Self::Output {
-        &mut self.board[index.y][index.x]
+        &mut self.board[index.y as usize][index.x as usize]
     }
 }
 
@@ -135,7 +163,7 @@ mod board_test {
     use crate::board::*;
 
     fn get_board() -> Board {
-        Board::new(8, 8)
+        Board::new(8, 8, false)
     }
 
     #[test]

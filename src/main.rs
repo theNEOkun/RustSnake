@@ -37,7 +37,7 @@ fn gameloop(mut board: Board) {
 
     let (max_x, max_y) = board.get_max_size();
     let mut snake = Snake::new(
-        snake::Position::new(max_x/2, max_y/2)
+        snake::Position::new((max_x/2) as isize, (max_y/2) as isize)
         );
     let mut term = Term::new();
 
@@ -56,6 +56,7 @@ fn gameloop(mut board: Board) {
             &format!("Size of the snake: {}", snake._get_size()),
             &format!("Number of fruits eaten: {}", snake._get_size() - 4),
             &format!("Time elapsed: {}", survival_time.elapsed().as_secs()),
+            &format!("Snake pos {}", snake.get_pos()),
         ]);
 
         match term.move_snake() {
@@ -73,6 +74,7 @@ fn gameloop(mut board: Board) {
         sleep(Duration::from_millis(50));
 
         let pos = snake.move_snake(&dirr);
+        let pos = board.get_overflow_pos(pos);
         if !board.check_position(&pos, Items::EMPTY) {
             if board.check_position(&pos, Items::FRUIT) {
                 fruit = snake.eat();
@@ -83,8 +85,6 @@ fn gameloop(mut board: Board) {
         if let Some(last_pos) = snake.get_back() {
             board.remove_position(&last_pos);
         }
-
-        let pos = board.get_overflow_pos(pos);
         snake.set_pos(pos);
 
         if fruit {
@@ -102,7 +102,7 @@ fn main() {
         match &args[1][..] {
             "--size" => {
                 let size: usize = (&args[2][..]).parse().unwrap();
-                gameloop(Board::new(size, size));
+                gameloop(Board::new(size, size, false));
             }
             _ => gameloop(Board::default()),
         }

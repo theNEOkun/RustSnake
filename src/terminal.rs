@@ -12,10 +12,10 @@ use tui::{
         Layout,
         Constraint,
         Rect,
-        Direction
+        Direction,
     } ,
     style::{Color, Style},
-    widgets::{Block, Paragraph, List, ListItem},
+    widgets::{Block, Paragraph, List, ListItem, BorderType, Borders},
     text::{Span, Spans},
     Terminal,
 };
@@ -55,8 +55,6 @@ impl Term {
         execute!(&term.stdout, EnterAlternateScreen).unwrap();
         term
     }
-
-
 
     pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>) {
         self.terminal.draw(|f| {
@@ -116,7 +114,9 @@ impl Drop for Term {
 fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chunk: Rect) {
     let rows: Vec<ListItem> = stats.iter().map(|x| ListItem::new(format!("{x}"))).collect();
     let text = List::new(rows)
-        .block(Block::default().title("stats"))
+        .block(Block::default().title("stats")
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded))
         ;
     f.render_widget(text, chunk);
 }
@@ -139,6 +139,8 @@ fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, f: &mut Frame
         }
         rows.push(Spans::from(cell_row));
     }
-    let text = Paragraph::new(rows).block(Block::default().title("Snake"));
+    let text = Paragraph::new(rows).block(Block::default().title("Snake")
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded));
     f.render_widget(text, chunk)
 }

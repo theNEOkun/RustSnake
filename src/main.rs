@@ -91,8 +91,6 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    let mut fruit = false;
-
     board.fruit();
 
     let survival_time = Instant::now();
@@ -122,17 +120,13 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
         }
 
         match player.move_snake(&mut board) {
-            snake::Happen::Some(_) => fruit,
+            snake::Happen::Some(_) => board.fruit(),
             snake::Happen::Break => break,
             _ => false,
         };
+
         if let Some(last_pos) = player.get_back() {
             board.remove_position(&last_pos);
-        }
-
-        if fruit {
-            board.fruit();
-            fruit = false;
         }
 
         sleep(Duration::from_millis(20));
@@ -145,9 +139,6 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
 fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
-
-    let mut fruit_1 = false;
-    let mut fruit_2 = false;
 
     board.fruit();
 
@@ -184,13 +175,13 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
         }
 
         match player_one.move_snake(&mut board) {
-            snake::Happen::Some(_) => fruit_1,
+            snake::Happen::Some(_) => board.fruit(),
             snake::Happen::Break => break,
             _ => false,
         };
 
         match player_two.move_snake(&mut board) {
-            snake::Happen::Some(_) => fruit_2,
+            snake::Happen::Some(_) => board.fruit(),
             snake::Happen::Break => break,
             _ => false,
         };
@@ -200,11 +191,6 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
         }
         if let Some(last_pos) = player_two.get_back() {
             board.remove_position(&last_pos);
-        }
-
-        if fruit_1 {
-            board.fruit();
-            fruit_1 = false;
         }
 
         sleep(Duration::from_millis(20));

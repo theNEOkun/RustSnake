@@ -36,7 +36,9 @@ fn opposite(dirr: &Directions) -> Directions {
 fn gameloop(mut board: Board) {
 
     let (max_x, max_y) = board.get_max_size();
-    let mut snake = Snake::new(max_x, max_y);
+    let mut snake = Snake::new(
+        snake::Position::new(max_x/2, max_y/2)
+        );
     let mut term = Term::new();
 
     let mut dirr: Directions = Directions::LEFT;
@@ -44,19 +46,16 @@ fn gameloop(mut board: Board) {
 
     board.fruit();
 
-    let surivival_time = Instant::now();
+    let survival_time = Instant::now();
     loop {
         let curr_pos = snake.get_pos();
         board.change_position(&curr_pos, Items::SNAKE);
 
         //going to top left corner
-        let size = snake._get_size();
-        let eaten = size - 4;
-        let time = surivival_time.elapsed().as_secs();
         term.render(board.get_vec(), vec![
-            &format!("Size of the snake: {size}"),
-            &format!("Number of fruits eaten: {eaten}"),
-            &format!("Time elapsed: {time}"),
+            &format!("Size of the snake: {}", snake._get_size()),
+            &format!("Number of fruits eaten: {}", snake._get_size() - 4),
+            &format!("Time elapsed: {}", survival_time.elapsed().as_secs()),
         ]);
 
         match term.move_snake() {

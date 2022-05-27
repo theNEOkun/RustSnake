@@ -42,14 +42,19 @@ pub enum MoveOpt<T> {
 pub struct Term {
     stdout: Stdout,
     terminal: Terminal<CrosstermBackend<Stdout>>,
+    board_size: (u16, u16)
 }
 
 impl Term {
-    pub fn new() -> Self {
+    pub fn new(board_size: (usize, usize)) -> Self {
         let backend = CrosstermBackend::new(stdout());
+            let board_width = (board_size.0 * 2 + 3) as u16;
+            let board_height = (board_size.1 + 2) as u16;
+            let board_size = (board_width, board_height);
         let term = Term {
             stdout: stdout(),
             terminal: Terminal::new(backend).unwrap(),
+            board_size
         };
         enable_raw_mode().unwrap();
         execute!(&term.stdout, EnterAlternateScreen).unwrap();
@@ -58,14 +63,20 @@ impl Term {
 
     pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>) {
         self.terminal.draw(|f| {
-            let chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                Constraint::Percentage(75),
-                Constraint::Percentage(25)
-            ]).split(f.size());
-            print_board(matrix, f, chunks[0]);
-            print_stats(stats, f, chunks[1]);
+            let board = Rect {
+                    x: 0,
+                    y: 0,
+                    width: self.board_size.0,
+                    height: self.board_size.1,
+                };
+            let stats_rect = Rect {
+                    x: self.board_size.0 + 1,
+                    y: 0,
+                    width: self.board_size.0,
+                    height: self.board_size.1,
+                };
+            print_board(matrix, f, board);
+            print_stats(stats, f, stats_rect);
         }).unwrap();
     }
 
@@ -111,13 +122,14 @@ impl Drop for Term {
     }
 }
 
+/// Used to print the stats to the screen
 fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chunk: Rect) {
     let rows: Vec<ListItem> = stats.iter().map(|x| ListItem::new(format!("{x}"))).collect();
     let text = List::new(rows)
         .block(Block::default().title("stats")
             .borders(Borders::ALL)
-            .border_type(BorderType::Rounded))
-        ;
+            .border_type(BorderType::Rounded));
+    let chunk = Rect::new(chunk.x, chunk.y, (stats[0].len() + 4) as u16, chunk.height);
     f.render_widget(text, chunk);
 }
 

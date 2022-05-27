@@ -8,6 +8,7 @@ use terminal::{
     Term,
     MoveOpt
 };
+use clap::Parser;
 
 use std::{thread::sleep, time::{Duration, Instant}};
 
@@ -18,6 +19,19 @@ pub enum Items {
     EMPTY = 0,
     SNAKE = 1,
     FRUIT = 2,
+}
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {    
+    #[clap(short, default_value_t=0)]
+    x: usize,
+
+    #[clap(short, default_value_t=0)]
+    y: usize,
+
+    #[clap(short, long)]
+    gaps: bool,
 }
 
 /// Method used to get the opposite direction of a given direction
@@ -39,7 +53,7 @@ fn gameloop(mut board: Board) {
     let mut snake = Snake::new(
         snake::Position::new((max_x/2) as isize, (max_y/2) as isize)
         );
-    let mut term = Term::new();
+    let mut term = Term::new((max_x, max_y));
 
     let mut dirr: Directions = Directions::LEFT;
     let mut fruit = false;
@@ -56,7 +70,7 @@ fn gameloop(mut board: Board) {
         let mins = secs/60;
         term.render(board.get_vec(), vec![
             &format!("Size of the snake: {}", snake._get_size()),
-            &format!("Number of fruits eaten: {}", snake._get_size() - 4),
+            &format!("Fruits eaten: {}", snake._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
         ]);
 
@@ -98,16 +112,15 @@ fn gameloop(mut board: Board) {
 //Main-method
 //Takes arguments
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 {
-        match &args[1][..] {
-            "--size" => {
-                let size: usize = (&args[2][..]).parse().unwrap();
-                gameloop(Board::new(size, size, false));
-            }
-            _ => gameloop(Board::default()),
-        }
-    } else {
+    let args = Args::parse();
+
+    if args.x != 0 && args.y != 0 {
+        gameloop(Board::new(args.x, args.y, args.gaps));
+    }
+    else if args.x == 0 && args.y == 0 && args.gaps {
+        gameloop(Board::new(board::DEFAULT, board::DEFAULT, args.gaps))
+    }
+    else {
         gameloop(Board::default())
     }
 }

@@ -10,6 +10,8 @@ use std::ops::{
     IndexMut
 };
 
+pub const DEFAULT: usize = 16;
+
 /// Contains the entire board, with interactions with it
 pub struct Board {
     board: Vec<Vec<Items>>,
@@ -139,7 +141,7 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self::new(16, 16, true)
+        Self::new(DEFAULT, DEFAULT, false)
     }
 }
 

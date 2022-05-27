@@ -9,7 +9,7 @@ use terminal::{
     MoveOpt
 };
 
-use std::{thread::sleep, time::Duration};
+use std::{thread::sleep, time::{Duration, Instant}};
 
 ///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
@@ -44,12 +44,20 @@ fn gameloop(mut board: Board) {
 
     board.fruit();
 
+    let surivival_time = Instant::now();
     loop {
         let curr_pos = snake.get_pos();
         board.change_position(&curr_pos, Items::SNAKE);
 
         //going to top left corner
-        term.render(board.get_vec());
+        let size = snake._get_size();
+        let eaten = size - 4;
+        let time = surivival_time.elapsed().as_secs();
+        term.render(board.get_vec(), vec![
+            format!("Size of the snake: {size}"),
+            format!("Number of fruits eaten: {eaten}"),
+            format!("Time elapsed: {time}"),
+        ]);
 
         match term.move_snake() {
             MoveOpt::Some(new_dirr) => {

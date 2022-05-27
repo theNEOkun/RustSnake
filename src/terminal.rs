@@ -71,26 +71,8 @@ impl Term {
                 height: self.board_size.1,
             };
             print_board(matrix, f, board);
-            print_stats(stats, f, stats_rect);
+            //print_stats(stats, f, stats_rect);
         }).unwrap();
-    }
-
-    /// Method used to move the snake
-    pub fn move_snake(&self, keys: &fn(Event) -> MoveOpt<Directions>) -> MoveOpt<Directions> {
-        if poll(Duration::from_millis(100)).unwrap() {
-            //matching the key
-            return match read().unwrap() {
-                //i think this speaks for itself
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('q'),
-                    modifiers: KeyModifiers::NONE,
-                }) => return MoveOpt::None,
-                
-                other => keys(other),
-            };
-        } else {
-            return MoveOpt::Same;
-        }
     }
 }
 
@@ -125,6 +107,7 @@ fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, f: &mut Frame
                 Items::WALL => Span::styled(WALL, Style::default().bg(Color::Gray)),
                 Items::FRUIT => Span::styled(FRUIT, Style::default().bg(Color::Red)),
                 Items::SNAKE => Span::styled(SNEK, Style::default().bg(Color::Green)),
+                Items::OSNAKE => Span::styled(SNEK, Style::default().bg(Color::Yellow)),
                 _ => Span::from(EMPTY),
             });
         }

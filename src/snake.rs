@@ -50,11 +50,12 @@ pub struct Snake {
     size: usize,
     keys: fn(Event) -> MoveOpt<Directions>,
     dirr: Directions,
+    item: Items
 }
 
 impl Snake {
     /// Creates a new [`Snake`].
-    pub fn new(start_pos: Position, keys: fn(Event) -> MoveOpt<Directions>) -> Self {
+    pub fn new(start_pos: Position, item: Items, keys: fn(Event) -> MoveOpt<Directions>) -> Self {
         let mut full_size = VecDeque::new();
         full_size.push_front(start_pos.clone());
         Snake {
@@ -63,6 +64,7 @@ impl Snake {
             size: 4,
             keys,
             dirr: Directions::LEFT,
+            item,
         }
     }
 
@@ -103,6 +105,10 @@ impl Snake {
     pub fn _get_size(&self) -> usize {
         self.size
     }
+
+    pub fn get_items(&self) -> &Items {
+        &self.item
+    } 
 
     pub fn move_snake(&mut self, board: &mut Board) -> Happen<bool> {
         let pos = match self.dirr {

@@ -22,7 +22,9 @@ pub enum Items {
     WALL = 10,
     EMPTY = 0,
     SNAKE = 1,
-    FRUIT = 2,
+    OSNAKE = 2,
+    FRUIT = 3,
+    OFRUIT = 4,
 }
 
 #[derive(Parser, Debug)]
@@ -33,6 +35,9 @@ struct Args {
 
     #[clap(short, default_value_t=0)]
     y: usize,
+
+    #[clap(short, long)]
+    multipl: bool,
 
     #[clap(short, long)]
     gaps: bool,
@@ -82,20 +87,63 @@ fn get_player_two(input: Event) -> MoveOpt<Directions> {
     }
 }
 
+fn gameloop_single(mut board: Board, mut player: Snake) {
+    let (max_x, max_y) = board.get_max_size();
+    let mut term = Term::new((max_x, max_y));
+
+    let mut fruit = false;
+
+    board.fruit();
+
+    let survival_time = Instant::now();
+    loop {
+        let curr_pos = player.get_pos();
+        board.change_position(&curr_pos, Items::SNAKE);
+
+        //going to top left corner
+        let secs = survival_time.elapsed().as_secs();
+        let mins = secs/60;
+        term.render(board.get_vec(), vec![
+            &format!("Size of the snake 1: {}", player._get_size()),
+            &format!("Fruits eaten 1: {}", player._get_size() - 4),
+            &format!("Time elapsed: {}:{}", mins, secs),
+        ]);
+
+        if poll(Duration::from_millis(100)).unwrap() {
+            let event = read().unwrap();
+            player.mover(event);
+            match event {
+                Event::Key(KeyEvent {
+                    code: KeyCode::Char('q'),
+                    modifiers: KeyModifiers::NONE,
+                }) => break,
+                _ => (),
+            }
+        }
+
+        match player.move_snake(&mut board) {
+            snake::Happen::Some(_) => fruit,
+            snake::Happen::Break => break,
+            _ => false,
+        };
+        if let Some(last_pos) = player.get_back() {
+            board.remove_position(&last_pos);
+        }
+
+        if fruit {
+            board.fruit();
+            fruit = false;
+        }
+
+        sleep(Duration::from_millis(20));
+    }
+}
+
 ///Main game loop
 ///
 ///param max_size is the size of max x and y
-fn gameloop(mut board: Board) {
-
+fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
     let (max_x, max_y) = board.get_max_size();
-    let mut snake_1 = Snake::new(
-        snake::Position::new((max_x/2) as isize, (max_y/2) as isize),
-        get_player_one
-    );
-    let mut snake_2 = Snake::new(
-        snake::Position::new((max_x/2) as isize, (max_y/2) as isize),
-        get_player_two
-    );
     let mut term = Term::new((max_x, max_y));
 
     let mut fruit_1 = false;
@@ -105,42 +153,52 @@ fn gameloop(mut board: Board) {
 
     let survival_time = Instant::now();
     loop {
-        let curr_pos_1 = snake_1.get_pos();
+        let curr_pos_1 = player_one.get_pos();
         board.change_position(&curr_pos_1, Items::SNAKE);
 
-        let curr_pos_2 = snake_2.get_pos();
-        board.change_position(&curr_pos_2, Items::SNAKE);
+        let curr_pos_2 = player_two.get_pos();
+        board.change_position(&curr_pos_2, Items::OSNAKE);
 
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
         let mins = secs/60;
         term.render(board.get_vec(), vec![
-            &format!("Size of the snake 1: {}", snake_1._get_size()),
-            &format!("Fruits eaten 1: {}", snake_1._get_size() - 4),
-            &format!("Size of the snake 2: {}", snake_2._get_size()),
-            &format!("Fruits eaten 2: {}", snake_2._get_size() - 4),
+            &format!("Size of the snake 1: {}", player_one._get_size()),
+            &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
+            &format!("Size of the snake 2: {}", player_two._get_size()),
+            &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
         ]);
 
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();
-            snake_1.mover(event);
-            snake_2.mover(event);
+            player_one.mover(event);
+            player_two.mover(event);
+            match event {
+                Event::Key(KeyEvent {
+                    code: KeyCode::Char('q'),
+                    modifiers: KeyModifiers::NONE,
+                }) => break,
+                _ => (),
+            }
         }
 
-        sleep(Duration::from_millis(20));
-
-        match snake_1.move_snake(&mut board) {
+        match player_one.move_snake(&mut board) {
             snake::Happen::Some(_) => fruit_1,
             snake::Happen::Break => break,
             _ => false,
         };
-        match snake_2.move_snake(&mut board) {
+
+        match player_two.move_snake(&mut board) {
             snake::Happen::Some(_) => fruit_2,
             snake::Happen::Break => break,
             _ => false,
         };
-        if let Some(last_pos) = snake_1.get_back() {
+
+        if let Some(last_pos) = player_one.get_back() {
+            board.remove_position(&last_pos);
+        }
+        if let Some(last_pos) = player_two.get_back() {
             board.remove_position(&last_pos);
         }
 
@@ -148,6 +206,8 @@ fn gameloop(mut board: Board) {
             board.fruit();
             fruit_1 = false;
         }
+
+        sleep(Duration::from_millis(20));
     }
 }
 
@@ -156,13 +216,31 @@ fn gameloop(mut board: Board) {
 fn main() {
     let args = Args::parse();
 
-    if args.x != 0 && args.y != 0 {
-        gameloop(Board::new(args.x, args.y, args.gaps));
-    }
-    else if args.x == 0 && args.y == 0 && args.gaps {
-        gameloop(Board::new(board::DEFAULT, board::DEFAULT, args.gaps))
-    }
-    else {
-        gameloop(Board::default())
-    }
+    let (size_x, size_y) = if args.x != 0 && args.y != 0 {
+        (args.x, args.y)
+    } else {
+        (board::DEFAULT, board::DEFAULT)
+    };
+
+    if args.multipl {
+        gameloop(Board::new(size_x, size_y, args.gaps),
+        Snake::new(
+            snake::Position::new((size_x/2) as isize,  (size_y/2) as isize),
+            Items::SNAKE,
+            get_player_one
+        ),
+        Snake::new(
+            snake::Position::new((size_x/2) as isize, (size_y/2) as isize),
+            Items::OSNAKE,
+            get_player_two
+        )
+        );
+    } else {
+        gameloop_single(Board::new(size_x, size_y, args.gaps),
+        Snake::new(
+            snake::Position::new((size_x/2) as isize,  (size_y/2) as isize),
+            Items::SNAKE,
+            get_player_one
+        ));
+    };
 }

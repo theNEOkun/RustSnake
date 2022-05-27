@@ -1,7 +1,14 @@
 use std::{
-collections::VecDeque,
-fmt::Display,
+    collections::VecDeque,
+    fmt::Display,
+    time::Duration,
 };
+
+use crossterm::event::{
+    poll, read, Event
+};
+
+use crate::{terminal::MoveOpt, board::Board, Items};
 
 #[derive(PartialEq, PartialOrd, Clone)]
 pub enum Directions {
@@ -31,21 +38,31 @@ impl Position {
     }
 }
 
+pub enum Happen<T> {
+    Some(T),
+    Break,
+    None
+}
+
 pub struct Snake {
     pos: Position,
     full_size: VecDeque<Position>,
-    size: usize
+    size: usize,
+    keys: fn(Event) -> MoveOpt<Directions>,
+    dirr: Directions,
 }
 
 impl Snake {
     /// Creates a new [`Snake`].
-    pub fn new(start_pos: Position) -> Self {
+    pub fn new(start_pos: Position, keys: fn(Event) -> MoveOpt<Directions>) -> Self {
         let mut full_size = VecDeque::new();
         full_size.push_front(start_pos.clone());
         Snake {
             pos: start_pos,
             full_size,
             size: 4,
+            keys,
+            dirr: Directions::LEFT,
         }
     }
 
@@ -54,6 +71,18 @@ impl Snake {
             Some(self.full_size.pop_back().unwrap())
         } else {
             None
+        }
+    }
+
+    pub fn mover(&mut self, read: Event) {
+        let opt = self.keys;
+        let dirr = match read {
+            event => opt(event),
+        };
+        if let MoveOpt::Some(new_dirr) = dirr {
+            if self.dirr != opposite(&new_dirr) {
+                self.dirr = new_dirr
+            }
         }
     }
 
@@ -75,8 +104,8 @@ impl Snake {
         self.size
     }
 
-    pub fn move_snake(&self, direction: &Directions) -> Position {
-        return match direction {
+    pub fn move_snake(&mut self, board: &mut Board) -> Happen<bool> {
+        let pos = match self.dirr {
             Directions::UP => {
                 Position::new(self.pos.x, self.pos.y - 1)
             },
@@ -89,8 +118,30 @@ impl Snake {
             Directions::RIGHT => {
                 Position::new(self.pos.x + 1, self.pos.y)
             }
-        }
+        };
+        let pos = board.get_overflow_pos(pos);
+        return if !board.check_position(&pos, Items::EMPTY) {
+            if board.check_position(&pos, Items::FRUIT) {
+                self.set_pos(pos);
+                Happen::Some(self.eat())
+            } else {
+                Happen::Break
+            }
+        } else {
+            self.set_pos(pos);
+            Happen::None
+        };
     }
+}
+
+/// Method used to get the opposite direction of a given direction
+fn opposite(dirr: &Directions) -> Directions {
+    return match dirr {
+        Directions::LEFT => Directions::RIGHT,
+        Directions::RIGHT => Directions::LEFT,
+        Directions::UP => Directions::DOWN,
+        Directions::DOWN => Directions::UP,
+    };
 }
 
 #[cfg(test)]
@@ -98,7 +149,7 @@ mod test_snake {
     use crate::snake::*;
 
     fn make_snake() -> Snake {
-        Snake::new(Position::new(4, 4))
+        Snake::new(Position::new(4, 4), vec![])
     }
 
     #[test]

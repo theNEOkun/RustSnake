@@ -10,6 +10,10 @@ use terminal::{
 };
 use clap::Parser;
 
+use crossterm::event::{
+    KeyCode, KeyEvent, KeyModifiers, Event,poll, read 
+};
+
 use std::{thread::sleep, time::{Duration, Instant}};
 
 ///!Used to differentiate the different items
@@ -34,14 +38,48 @@ struct Args {
     gaps: bool,
 }
 
-/// Method used to get the opposite direction of a given direction
-fn opposite(dirr: &Directions) -> Directions {
-    return match dirr {
-        Directions::LEFT => Directions::RIGHT,
-        Directions::RIGHT => Directions::LEFT,
-        Directions::UP => Directions::DOWN,
-        Directions::DOWN => Directions::UP,
-    };
+fn get_player_one(input: Event) -> MoveOpt<Directions> {
+    match input {
+        Event::Key(KeyEvent {
+            code: KeyCode::Left,
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::LEFT),
+        Event::Key(KeyEvent {
+            code: KeyCode::Right,
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::RIGHT),
+        Event::Key(KeyEvent {
+            code: KeyCode::Up,
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::UP),
+        Event::Key(KeyEvent {
+            code: KeyCode::Down,
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::DOWN),
+        _ => MoveOpt::Same
+    }
+}
+
+fn get_player_two(input: Event) -> MoveOpt<Directions> {
+    match input {
+        Event::Key(KeyEvent {
+            code: KeyCode::Char('a'),
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::LEFT),
+        Event::Key(KeyEvent {
+            code: KeyCode::Char('d'),
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::RIGHT),
+        Event::Key(KeyEvent {
+            code: KeyCode::Char('w'),
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::UP),
+        Event::Key(KeyEvent {
+            code: KeyCode::Char('s'),
+            modifiers: KeyModifiers::NONE
+        }) => MoveOpt::Some(Directions::DOWN),
+        _ => MoveOpt::Same
+    }
 }
 
 ///Main game loop
@@ -50,61 +88,65 @@ fn opposite(dirr: &Directions) -> Directions {
 fn gameloop(mut board: Board) {
 
     let (max_x, max_y) = board.get_max_size();
-    let mut snake = Snake::new(
-        snake::Position::new((max_x/2) as isize, (max_y/2) as isize)
-        );
+    let mut snake_1 = Snake::new(
+        snake::Position::new((max_x/2) as isize, (max_y/2) as isize),
+        get_player_one
+    );
+    let mut snake_2 = Snake::new(
+        snake::Position::new((max_x/2) as isize, (max_y/2) as isize),
+        get_player_two
+    );
     let mut term = Term::new((max_x, max_y));
 
-    let mut dirr: Directions = Directions::LEFT;
-    let mut fruit = false;
+    let mut fruit_1 = false;
+    let mut fruit_2 = false;
 
     board.fruit();
 
     let survival_time = Instant::now();
     loop {
-        let curr_pos = snake.get_pos();
-        board.change_position(&curr_pos, Items::SNAKE);
+        let curr_pos_1 = snake_1.get_pos();
+        board.change_position(&curr_pos_1, Items::SNAKE);
+
+        let curr_pos_2 = snake_2.get_pos();
+        board.change_position(&curr_pos_2, Items::SNAKE);
 
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
         let mins = secs/60;
         term.render(board.get_vec(), vec![
-            &format!("Size of the snake: {}", snake._get_size()),
-            &format!("Fruits eaten: {}", snake._get_size() - 4),
+            &format!("Size of the snake 1: {}", snake_1._get_size()),
+            &format!("Fruits eaten 1: {}", snake_1._get_size() - 4),
+            &format!("Size of the snake 2: {}", snake_2._get_size()),
+            &format!("Fruits eaten 2: {}", snake_2._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
         ]);
 
-        match term.move_snake() {
-            MoveOpt::Some(new_dirr) => {
-                dirr = if dirr != opposite(&new_dirr) {
-                    new_dirr
-                } else {
-                    dirr
-                }
-            }
-            MoveOpt::None => break,
-            _ => (),
+        if poll(Duration::from_millis(100)).unwrap() {
+            let event = read().unwrap();
+            snake_1.mover(event);
+            snake_2.mover(event);
         }
 
         sleep(Duration::from_millis(20));
 
-        let pos = snake.move_snake(&dirr);
-        let pos = board.get_overflow_pos(pos);
-        if !board.check_position(&pos, Items::EMPTY) {
-            if board.check_position(&pos, Items::FRUIT) {
-                fruit = snake.eat();
-            } else {
-                break;
-            }
-        }
-        if let Some(last_pos) = snake.get_back() {
+        match snake_1.move_snake(&mut board) {
+            snake::Happen::Some(_) => fruit_1,
+            snake::Happen::Break => break,
+            _ => false,
+        };
+        match snake_2.move_snake(&mut board) {
+            snake::Happen::Some(_) => fruit_2,
+            snake::Happen::Break => break,
+            _ => false,
+        };
+        if let Some(last_pos) = snake_1.get_back() {
             board.remove_position(&last_pos);
         }
-        snake.set_pos(pos);
 
-        if fruit {
+        if fruit_1 {
             board.fruit();
-            fruit = false;
+            fruit_1 = false;
         }
     }
 }

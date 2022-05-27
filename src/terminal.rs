@@ -76,7 +76,7 @@ impl Term {
     }
 
     /// Method used to move the snake
-    pub fn move_snake(&self) -> MoveOpt<Directions> {
+    pub fn move_snake(&self, keys: &fn(Event) -> MoveOpt<Directions>) -> MoveOpt<Directions> {
         if poll(Duration::from_millis(100)).unwrap() {
             //matching the key
             return match read().unwrap() {
@@ -85,24 +85,8 @@ impl Term {
                     code: KeyCode::Char('q'),
                     modifiers: KeyModifiers::NONE,
                 }) => return MoveOpt::None,
-                Event::Key(KeyEvent {
-                    code: KeyCode::Left,
-                    modifiers: KeyModifiers::NONE,
-                    //clearing the screen and printing our message
-                }) => MoveOpt::Some(Directions::LEFT),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Right,
-                    modifiers: KeyModifiers::NONE,
-                }) => MoveOpt::Some(Directions::RIGHT),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Up,
-                    modifiers: KeyModifiers::NONE,
-                }) => MoveOpt::Some(Directions::UP),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Down,
-                    modifiers: KeyModifiers::NONE,
-                }) => MoveOpt::Some(Directions::DOWN),
-                _ => MoveOpt::Same,
+                
+                other => keys(other),
             };
         } else {
             return MoveOpt::Same;

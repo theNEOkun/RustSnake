@@ -58,7 +58,7 @@ impl Term {
 
 
 
-    pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<String>) {
+    pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>) {
         self.terminal.draw(|f| {
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
@@ -113,7 +113,7 @@ impl Drop for Term {
     }
 }
 
-fn print_stats<B: tui::backend::Backend>(stats: Vec<String>, f: &mut Frame<B>, chunk: Rect) {
+fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chunk: Rect) {
     let rows: Vec<ListItem> = stats.iter().map(|x| ListItem::new(format!("{x}"))).collect();
     let text = List::new(rows)
         .block(Block::default().title("stats"))

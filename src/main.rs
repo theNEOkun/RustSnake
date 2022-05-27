@@ -54,9 +54,9 @@ fn gameloop(mut board: Board) {
         let eaten = size - 4;
         let time = surivival_time.elapsed().as_secs();
         term.render(board.get_vec(), vec![
-            format!("Size of the snake: {size}"),
-            format!("Number of fruits eaten: {eaten}"),
-            format!("Time elapsed: {time}"),
+            &format!("Size of the snake: {size}"),
+            &format!("Number of fruits eaten: {eaten}"),
+            &format!("Time elapsed: {time}"),
         ]);
 
         match term.move_snake() {

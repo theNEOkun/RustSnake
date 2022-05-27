@@ -44,6 +44,7 @@ pub struct Snake {
     dirr: Directions,
     item: Items,
     fruit: Items,
+    fruit_pos: Option<Position>
 }
 
 impl Snake {
@@ -64,8 +65,9 @@ impl Snake {
             dirr: Directions::LEFT,
             item,
             fruit,
+            fruit_pos: None
         }
-    }
+        }
 
     pub fn get_back(&mut self) -> Option<Position> {
         return if self.full_size.len() >= self.size {
@@ -96,6 +98,10 @@ impl Snake {
         &self.fruit
     }
 
+    pub fn set_fruit(&mut self, fruit_pos: Position) {
+        self.fruit_pos = Some(fruit_pos)
+    }
+
     pub fn get_pos(&self) -> Position {
         self.pos.clone()
     }
@@ -121,16 +127,16 @@ impl Snake {
             Directions::RIGHT => Position::new(self.pos.x + 1, self.pos.y),
         };
         let pos = board.get_overflow_pos(pos);
-        return if !board.check_position(&pos, &Items::EMPTY) {
+        return if !board.check_position(&pos, &Items::WALL) {
             if board.check_position(&pos, self.fruit()) {
                 self.set_pos(pos);
                 Happen::Some(self.eat())
             } else {
-                Happen::Break
+                self.set_pos(pos);
+                Happen::None
             }
         } else {
-            self.set_pos(pos);
-            Happen::None
+            Happen::Break
         };
     }
 }

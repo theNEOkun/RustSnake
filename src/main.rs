@@ -14,7 +14,7 @@ use crossterm::event::{
     KeyCode, KeyEvent, KeyModifiers, Event,poll, read 
 };
 
-use std::{thread::sleep, time::{Duration, Instant}};
+use std::{thread::sleep, time::{Duration, Instant},process::ExitCode };
 
 ///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
@@ -176,13 +176,13 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
         }
 
         match player_one.move_snake(&mut board) {
-            snake::Happen::Some(_) => board.fruit(player_one.fruit()),
+            snake::Happen::Some(_) => player_one.set_fruit(board.fruit()),
             snake::Happen::Break => break,
             _ => false,
         };
 
         match player_two.move_snake(&mut board) {
-            snake::Happen::Some(_) => board.fruit(player_two.fruit()),
+            snake::Happen::Some(_) => player_two.set_fruit(board.fruit()),
             snake::Happen::Break => break,
             _ => false,
         };

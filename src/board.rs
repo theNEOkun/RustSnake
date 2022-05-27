@@ -77,12 +77,12 @@ impl Board {
     /// Used to set a new fruit on the board
     ///
     /// Checks if a position is empty first
-    pub fn fruit(&mut self, fruit: &Items) -> bool {
+    pub fn fruit(&mut self, fruit: &Items) -> Position {
         let mut fruit_pos = self.get_rand_block();
-        while !self.change_position(&fruit_pos, fruit.clone()) {
+        while !self.check_position(&fruit_pos, &Items::EMPTY) {
             fruit_pos = self.get_rand_block();
         }
-        true
+        fruit_pos
     }
 
     /// Used to get a random position on the board, inside the walls

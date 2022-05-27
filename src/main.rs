@@ -84,6 +84,7 @@ fn gameloop(mut board: Board) {
             board.remove_position(&last_pos);
         }
 
+        let pos = board.get_overflow_pos(pos);
         snake.set_pos(pos);
 
         if fruit {

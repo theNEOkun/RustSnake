@@ -29,6 +29,7 @@ pub struct Snake {
 }
 
 impl Snake {
+    /// Creates a new [`Snake`].
     pub fn new(start_pos: Position) -> Self {
         let mut full_size = VecDeque::new();
         full_size.push_front(start_pos.clone());

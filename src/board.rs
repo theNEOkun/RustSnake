@@ -88,6 +88,21 @@ impl Board {
         }
     }
 
+    /// Used to get a position that overflows the board
+    pub fn get_overflow_pos(&mut self, pos: Position) -> Position {
+        return if pos.x >= self.max_x {
+            Position::new(0, pos.y)
+        } else if pos.y >= self.max_y {
+            Position::new(pos.x, 0)
+        } else if pos.x == 0 {
+            Position::new(self.max_x - 1, pos.y)
+        } else if pos.y == 0 {
+            Position::new(pos.x, self.max_y - 1)
+        } else {
+            pos
+        }
+    }
+
     /// Returns the underlying vectors
     pub fn get_vec(&self) -> &Vec<Vec<Items>> {
         &self.board

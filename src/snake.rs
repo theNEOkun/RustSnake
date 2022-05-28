@@ -42,7 +42,7 @@ pub struct Snake {
     size: usize,
     keys: fn(Event) -> MoveOpt<Directions>,
     dirr: Directions,
-    item: Items,
+    snake_self: Items,
     fruit: Items,
 }
 
@@ -50,7 +50,7 @@ impl Snake {
     /// Creates a new [`Snake`].
     pub fn new(
         start_pos: Position,
-        item: Items,
+        snake_self: Items,
         fruit: Items,
         keys: fn(Event) -> MoveOpt<Directions>,
     ) -> Self {
@@ -62,7 +62,7 @@ impl Snake {
             size: 4,
             keys,
             dirr: Directions::LEFT,
-            item,
+            snake_self,
             fruit,
         }
     }
@@ -110,7 +110,7 @@ impl Snake {
     }
 
     pub fn get_items(&self) -> Items {
-        self.item.clone()
+        self.snake_self.clone()
     }
 
     pub fn move_snake(
@@ -125,7 +125,7 @@ impl Snake {
             Directions::RIGHT => Position::new(self.pos.x + 1, self.pos.y),
         };
         let pos = board.get_overflow_pos(pos);
-        return if !board.check_position(&pos, &Items::WALL) {
+        return if !(board.check_position(&pos, &Items::WALL) || board.check_position(&pos, &self.snake_self)) {
             for fruit_pos in 0..fruits.len() {
                 let each = &fruits[fruit_pos];
                 if &pos == &each.0 && &self.fruit == &each.1 {

@@ -172,6 +172,8 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
     let survival_time = Instant::now();
 
     let mut fruits = vec![];
+    fruit(&mut board, player_one.fruit(), &mut fruits);
+    fruit(&mut board, player_two.fruit(), &mut fruits);
     loop {
         let curr_pos_1 = player_one.get_pos();
         board.change_position(&curr_pos_1, player_one.get_items());

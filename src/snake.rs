@@ -125,7 +125,8 @@ impl Snake {
             Directions::RIGHT => Position::new(self.pos.x + 1, self.pos.y),
         };
         let pos = board.get_overflow_pos(pos);
-        return if !(board.check_position(&pos, &Items::WALL) || board.check_position(&pos, &self.snake_self)) {
+        //return if !(board.check_position(&pos, &Items::WALL) || board.check_position(&pos, &self.snake_self)) {
+        return if !board.check_position(&pos, &Items::EMPTY) {
             for fruit_pos in 0..fruits.len() {
                 let each = &fruits[fruit_pos];
                 if &pos == &each.0 && &self.fruit == &each.1 {
@@ -134,10 +135,10 @@ impl Snake {
                     return Happen::Some(self.eat());
                 }
             }
+            Happen::Break
+        } else {
             self.set_pos(pos);
             Happen::None
-        } else {
-            Happen::Break
         };
     }
 

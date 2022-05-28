@@ -3,22 +3,20 @@ mod snake;
 mod terminal;
 
 use board::Board;
-use snake::{Directions, Snake, Position};
-use terminal::{
-    Term,
-    MoveOpt
-};
 use clap::Parser;
-use rand::{prelude::{
-    thread_rng,
-    ThreadRng,
-}, Rng};
-
-use crossterm::event::{
-    KeyCode, KeyEvent, KeyModifiers, Event,poll, read 
+use rand::{
+    prelude::{thread_rng, ThreadRng},
+    Rng,
 };
+use snake::{Directions, Position, Snake};
+use terminal::{MoveOpt, Term};
 
-use std::{thread::sleep, time::{Duration, Instant}};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
+
+use std::{
+    thread::sleep,
+    time::{Duration, Instant},
+};
 
 ///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
@@ -33,11 +31,11 @@ pub enum Items {
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
-struct Args {    
-    #[clap(short, default_value_t=0)]
+struct Args {
+    #[clap(short, default_value_t = 0)]
     x: usize,
 
-    #[clap(short, default_value_t=0)]
+    #[clap(short, default_value_t = 0)]
     y: usize,
 
     #[clap(short, long)]
@@ -45,27 +43,30 @@ struct Args {
 
     #[clap(short, long)]
     gaps: bool,
+
+    #[clap(short, long)]
+    share_fruit: bool,
 }
 
 fn get_player_one(input: Event) -> MoveOpt<Directions> {
     match input {
         Event::Key(KeyEvent {
             code: KeyCode::Left,
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::LEFT),
         Event::Key(KeyEvent {
             code: KeyCode::Right,
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::RIGHT),
         Event::Key(KeyEvent {
             code: KeyCode::Up,
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::UP),
         Event::Key(KeyEvent {
             code: KeyCode::Down,
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::DOWN),
-        _ => MoveOpt::Same
+        _ => MoveOpt::Same,
     }
 }
 
@@ -73,21 +74,21 @@ fn get_player_two(input: Event) -> MoveOpt<Directions> {
     match input {
         Event::Key(KeyEvent {
             code: KeyCode::Char('a'),
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::LEFT),
         Event::Key(KeyEvent {
             code: KeyCode::Char('d'),
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::RIGHT),
         Event::Key(KeyEvent {
             code: KeyCode::Char('w'),
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::UP),
         Event::Key(KeyEvent {
             code: KeyCode::Char('s'),
-            modifiers: KeyModifiers::NONE
+            modifiers: KeyModifiers::NONE,
         }) => MoveOpt::Some(Directions::DOWN),
-        _ => MoveOpt::Same
+        _ => MoveOpt::Same,
     }
 }
 
@@ -108,10 +109,10 @@ pub fn fruit(board: &mut Board, fruit: &Items, fruits: &mut Vec<(Position, Items
 /// Returns that random position as a Position-type
 fn get_rand_block(max_x: usize, max_y: usize) -> Position {
     let mut RNG: ThreadRng = thread_rng();
-    let x = RNG.gen_range(1..(max_x-2)) as isize;
-    let y = RNG.gen_range(1..(max_y-2)) as isize;
+    let x = RNG.gen_range(1..(max_x - 2)) as isize;
+    let y = RNG.gen_range(1..(max_y - 2)) as isize;
     Position::new(x, y)
-} 
+}
 
 fn gameloop_single(mut board: Board, mut player: Snake) {
     let (max_x, max_y) = board.get_max_size();
@@ -140,7 +141,7 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
         match player.move_snake(&mut board, &mut fruits) {
             snake::Happen::Some(_) => fruit(&mut board, player.fruit(), &mut fruits),
             snake::Happen::Break => break,
-            _ => {},
+            _ => {}
         };
 
         if let Some(last_pos) = player.get_back() {
@@ -149,14 +150,17 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
 
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
-        let mins = secs/60;
-        term.render(&board, vec![
-            &format!("Size of the snake: {}", player._get_size()),
-            &format!("Fruits eaten: {}", player._get_size() - 4),
-            &format!("Time elapsed: {}:{}", mins, secs),
-        ],
-        vec![&player],
-        &fruits);
+        let mins = secs / 60;
+        term.render(
+            &board,
+            vec![
+                &format!("Size of the snake: {}", player._get_size()),
+                &format!("Fruits eaten: {}", player._get_size() - 4),
+                &format!("Time elapsed: {}:{}", mins, secs),
+            ],
+            vec![&player],
+            &fruits,
+        );
 
         sleep(Duration::from_millis(20));
     }
@@ -165,15 +169,19 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
 ///Main game loop
 ///
 ///param max_size is the size of max x and y
-fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
+fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake, share: bool) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
     let survival_time = Instant::now();
 
     let mut fruits = vec![];
-    fruit(&mut board, player_one.fruit(), &mut fruits);
-    fruit(&mut board, player_two.fruit(), &mut fruits);
+    if !share {
+        fruit(&mut board, player_one.fruit(), &mut fruits);
+        fruit(&mut board, player_two.fruit(), &mut fruits);
+    } else {
+        fruit(&mut board, player_two.fruit(), &mut fruits);
+    }
     loop {
         let curr_pos_1 = player_one.get_pos();
         board.change_position(&curr_pos_1, player_one.get_items());
@@ -183,16 +191,19 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
 
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
-        let mins = secs/60;
-        term.render(&board, vec![
-            &format!("Size of the snake 1: {}", player_one._get_size()),
-            &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
-            &format!("Size of the snake 2: {}", player_two._get_size()),
-            &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
-            &format!("Time elapsed: {}:{}", mins, secs),
-        ],
-        vec![&player_one, &player_two],
-        &fruits);
+        let mins = secs / 60;
+        term.render(
+            &board,
+            vec![
+                &format!("Size of the snake 1: {}", player_one._get_size()),
+                &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
+                &format!("Size of the snake 2: {}", player_two._get_size()),
+                &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
+                &format!("Time elapsed: {}:{}", mins, secs),
+            ],
+            vec![&player_one, &player_two],
+            &fruits,
+        );
 
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();
@@ -242,27 +253,50 @@ fn main() {
     };
 
     if args.multipl {
-        gameloop(Board::new(size_x, size_y, args.gaps),
-        Snake::new(
-            snake::Position::new((size_x/2) as isize,  (size_y/2) as isize),
-            Items::SNAKE,
-            Items::FRUIT,
-            get_player_one
-        ),
-        Snake::new(
-            snake::Position::new((size_x/2) as isize, (size_y/2) as isize),
-            Items::OSNAKE,
-            Items::OFRUIT,
-            get_player_two
-        )
-        );
+        if args.share_fruit {
+            gameloop(
+                Board::new(size_x, size_y, args.gaps),
+                Snake::new(
+                    snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
+                    Items::SNAKE,
+                    Items::FRUIT,
+                    get_player_one,
+                ),
+                Snake::new(
+                    snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
+                    Items::OSNAKE,
+                    Items::FRUIT,
+                    get_player_two,
+                ),
+                args.share_fruit
+            );
+        } else {
+            gameloop(
+                Board::new(size_x, size_y, args.gaps),
+                Snake::new(
+                    snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
+                    Items::SNAKE,
+                    Items::FRUIT,
+                    get_player_one,
+                ),
+                Snake::new(
+                    snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
+                    Items::OSNAKE,
+                    Items::OFRUIT,
+                    get_player_two,
+                ),
+                args.share_fruit
+            );
+        }
     } else {
-        gameloop_single(Board::new(size_x, size_y, args.gaps),
-        Snake::new(
-            snake::Position::new((size_x/2) as isize,  (size_y/2) as isize),
-            Items::SNAKE,
-            Items::FRUIT,
-            get_player_one
-        ));
+        gameloop_single(
+            Board::new(size_x, size_y, args.gaps),
+            Snake::new(
+                snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
+                Items::SNAKE,
+                Items::FRUIT,
+                get_player_one,
+            ),
+        );
     };
 }

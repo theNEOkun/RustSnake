@@ -105,7 +105,8 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
             &format!("Size of the snake: {}", player._get_size()),
             &format!("Fruits eaten: {}", player._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
-        ]);
+        ],
+        vec![&player]);
 
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();
@@ -162,7 +163,8 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
             &format!("Size of the snake 2: {}", player_two._get_size()),
             &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
-        ]);
+        ],
+        vec![&player_one, &player_two]);
 
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();

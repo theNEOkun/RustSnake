@@ -20,7 +20,7 @@ use std::{
     time::Duration,
 };
 
-use crate::Directions;
+use crate::{Directions, snake::Snake};
 use crate::Items;
 
 const WALL: &str = " W";
@@ -56,7 +56,7 @@ impl Term {
         term
     }
 
-    pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>) {
+    pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>, players: Vec<&Snake>) {
         self.terminal.draw(|f| {
             let board = Rect {
                 x: 0,
@@ -70,7 +70,7 @@ impl Term {
                 width: self.board_size.0,
                 height: self.board_size.1,
             };
-            print_board(matrix, f, board);
+            print_board(matrix, players, f, board);
             print_stats(stats, f, stats_rect);
         }).unwrap();
     }
@@ -98,23 +98,42 @@ fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chu
 ///
 ///board is the board to print
 ///stdout is used to print
-fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, f: &mut Frame<B>, chunk: Rect) {
+fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, players: Vec<&Snake>, f: &mut Frame<B>, chunk: Rect) {
     let mut rows = vec![];
     for each in matrix {
         let mut cell_row = vec![];
         for cell in each {
             cell_row.push(match cell {
                 Items::WALL => Span::styled(WALL, Style::default().bg(Color::Gray)),
-                Items::FRUIT => Span::styled(FRUIT, Style::default().bg(Color::Red)),
-                Items::SNAKE => Span::styled(SNEK, Style::default().bg(Color::Green)),
-                Items::OSNAKE => Span::styled(SNEK, Style::default().bg(Color::Yellow)),
-                Items::OFRUIT => Span::styled(FRUIT, Style::default().bg(Color::Blue)),
                 _ => Span::from(EMPTY),
             });
         }
-        rows.push(Spans::from(cell_row));
+        rows.push(cell_row);
     }
-    let text = Paragraph::new(rows).block(Block::default().title("Snake")
+    for player in players {
+        for pos in player.get_tail() {
+            let snake = match player.get_items() {
+                Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
+                Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
+                _ => Span::from(EMPTY)
+            };
+            rows[pos.y as usize][pos.x as usize] = snake;
+        }
+        let (fruit, pos) = player.fruit();
+        if let Some(pos) = pos {
+            let fruit = match fruit {
+                Items::FRUIT => Span::styled(FRUIT, Style::default().fg(Color::Red)),
+                Items::OFRUIT => Span::styled(FRUIT, Style::default().fg(Color::Blue)),
+                _ => Span::from(EMPTY),
+            };
+            rows[pos.y as usize][pos.y as usize] = fruit;
+        }
+    }
+    let mut paragraph = vec![];
+    for each in rows {
+        paragraph.push(Spans::from(each));
+    }
+    let text = Paragraph::new(paragraph).block(Block::default().title("Snake")
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded));
         f.render_widget(text, chunk)

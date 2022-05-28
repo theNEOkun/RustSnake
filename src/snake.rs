@@ -139,6 +139,10 @@ impl Snake {
             Happen::Break
         };
     }
+
+    pub fn get_tail(&self) -> &VecDeque<Position> {
+        &self.full_size
+    }
 }
 
 /// Method used to get the opposite direction of a given direction

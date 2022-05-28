@@ -96,7 +96,7 @@ impl Board {
     }
 
     /// Used to get a position that overflows the board
-    pub fn get_overflow_pos(&mut self, pos: Position) -> Position {
+    pub fn get_overflow_pos(&self, pos: Position) -> Position {
         return if pos.x == (self.max_x as isize) {
             Position::new(0, pos.y)
         } else if pos.y == (self.max_y as isize) {

@@ -113,18 +113,22 @@ impl Snake {
         self.snake_self.clone()
     }
 
-    pub fn move_snake(
-        &mut self,
-        board: &mut Board,
-        fruits: &mut Vec<(Position, Items)>,
-    ) -> Happen<bool> {
+    fn new_pos(&self, board: &Board) -> Position {
         let pos = match self.dirr {
             Directions::UP => Position::new(self.pos.x, self.pos.y - 1),
             Directions::DOWN => Position::new(self.pos.x, self.pos.y + 1),
             Directions::LEFT => Position::new(self.pos.x - 1, self.pos.y),
             Directions::RIGHT => Position::new(self.pos.x + 1, self.pos.y),
         };
-        let pos = board.get_overflow_pos(pos);
+        board.get_overflow_pos(pos)
+    }
+
+    pub fn move_snake(
+        &mut self,
+        board: &mut Board,
+        fruits: &mut Vec<(Position, Items)>,
+    ) -> Happen<bool> {
+        let pos = self.new_pos(board);
         //return if !(board.check_position(&pos, &Items::WALL) || board.check_position(&pos, &self.snake_self)) {
         return if !board.check_position(&pos, &Items::EMPTY) {
             for fruit_pos in 0..fruits.len() {

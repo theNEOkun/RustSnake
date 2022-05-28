@@ -1,9 +1,5 @@
 use crate::snake::Position;
 use crate::Items;
-use rand::{prelude::{
-    thread_rng,
-    ThreadRng,
-}, Rng};
 
 use std::ops::{
     Index,
@@ -17,7 +13,7 @@ pub struct Board {
     board: Vec<Vec<Items>>,
     max_x: usize,
     max_y: usize,
-    rng: ThreadRng,
+    fruits: Vec<Position>
 }
 
 /// Used to get a board where there are no gaps in the walls
@@ -66,38 +62,13 @@ impl Board {
             board,
             max_x: size_x,
             max_y: size_y,
-            rng: thread_rng(),
+            fruits: vec![]
         }
     }
 
     pub fn get_max_size(&self) -> (usize, usize) {
         (self.max_x, self.max_y)
     }
-
-    /// Used to set a new fruit on the board
-    ///
-    /// Checks if a position is empty first
-    pub fn fruit(&mut self) -> Position {
-        let mut fruit_pos = self.get_rand_block();
-        while !self.check_position(&fruit_pos, &Items::EMPTY) {
-            fruit_pos = self.get_rand_block();
-        }
-        fruit_pos
-    }
-
-    pub fn set_fruit(&mut self, pos: &Option<Position>, fruit: &Items) {
-        if let Some(position) = pos {
-            self[position] = fruit.clone();
-        }
-    }
-
-    /// Used to get a random position on the board, inside the walls
-    /// Returns that random position as a Position-type
-    fn get_rand_block(&mut self) -> Position {
-        let x = self.rng.gen_range(1..(self.max_x-2)) as isize;
-        let y = self.rng.gen_range(1..(self.max_y-2)) as isize;
-        Position::new(x, y)
-    } 
 
     /// Checks if a position is empty
     pub fn check_position(&self, pos: &Position, ident: &Items) -> bool {

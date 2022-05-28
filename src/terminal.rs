@@ -20,7 +20,7 @@ use std::{
     time::Duration,
 };
 
-use crate::{Directions, snake::Snake};
+use crate::{Directions, snake::{Snake, Position}, board::Board};
 use crate::Items;
 
 const WALL: &str = " W";
@@ -56,9 +56,9 @@ impl Term {
         term
     }
 
-    pub fn render(&mut self, matrix: &Vec<Vec<Items>>, stats: Vec<&str>, players: Vec<&Snake>) {
+    pub fn render(&mut self, board: &Board, stats: Vec<&str>, players: Vec<&Snake>, fruits: &Vec<(Position, Items)>) {
         self.terminal.draw(|f| {
-            let board = Rect {
+            let board_rect = Rect {
                 x: 0,
                 y: 0,
                 width: self.board_size.0,
@@ -70,7 +70,7 @@ impl Term {
                 width: self.board_size.0,
                 height: self.board_size.1,
             };
-            print_board(matrix, players, f, board);
+            print_board(board, players, fruits, f, board_rect);
             print_stats(stats, f, stats_rect);
         }).unwrap();
     }
@@ -98,9 +98,9 @@ fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chu
 ///
 ///board is the board to print
 ///stdout is used to print
-fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, players: Vec<&Snake>, f: &mut Frame<B>, chunk: Rect) {
+fn print_board<B: tui::backend::Backend>(board: &Board, players: Vec<&Snake>, fruits: &Vec<(Position, Items)>, f: &mut Frame<B>, chunk: Rect) {
     let mut rows = vec![];
-    for each in matrix {
+    for each in board.get_vec() {
         let mut cell_row = vec![];
         for cell in each {
             cell_row.push(match cell {
@@ -119,15 +119,14 @@ fn print_board<B: tui::backend::Backend>(matrix: &Vec<Vec<Items>>, players: Vec<
             };
             rows[pos.y as usize][pos.x as usize] = snake;
         }
-        let (fruit, pos) = player.fruit();
-        if let Some(pos) = pos {
-            let fruit = match fruit {
-                Items::FRUIT => Span::styled(FRUIT, Style::default().fg(Color::Red)),
-                Items::OFRUIT => Span::styled(FRUIT, Style::default().fg(Color::Blue)),
-                _ => Span::from(EMPTY),
-            };
-            rows[pos.y as usize][pos.y as usize] = fruit;
-        }
+    }
+    for (fruit_pos, fruit_type) in fruits {
+        let fruit = match fruit_type {
+            Items::FRUIT => Span::styled(FRUIT, Style::default().fg(Color::Red)),
+            Items::OFRUIT => Span::styled(FRUIT, Style::default().fg(Color::Blue)),
+            _ => Span::from(EMPTY),
+        };
+        rows[fruit_pos.y as usize][fruit_pos.x as usize] = fruit;
     }
     let mut paragraph = vec![];
     for each in rows {

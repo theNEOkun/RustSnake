@@ -3,18 +3,22 @@ mod snake;
 mod terminal;
 
 use board::Board;
-use snake::{Directions, Snake};
+use snake::{Directions, Snake, Position};
 use terminal::{
     Term,
     MoveOpt
 };
 use clap::Parser;
+use rand::{prelude::{
+    thread_rng,
+    ThreadRng,
+}, Rng};
 
 use crossterm::event::{
     KeyCode, KeyEvent, KeyModifiers, Event,poll, read 
 };
 
-use std::{thread::sleep, time::{Duration, Instant},process::ExitCode };
+use std::{thread::sleep, time::{Duration, Instant}};
 
 ///!Used to differentiate the different items
 #[derive(PartialEq, PartialOrd, Clone)]
@@ -87,26 +91,39 @@ fn get_player_two(input: Event) -> MoveOpt<Directions> {
     }
 }
 
+/// Used to set a new fruit on the board
+///
+/// Checks if a position is empty first
+pub fn fruit(board: &mut Board, fruit: &Items, fruits: &mut Vec<(Position, Items)>) {
+    let (max_x, max_y) = board.get_max_size();
+    let mut fruit_pos = get_rand_block(max_x, max_y);
+    while !board.check_position(&fruit_pos, &Items::EMPTY) {
+        fruit_pos = get_rand_block(max_x, max_y);
+    }
+    board[&fruit_pos] = fruit.clone();
+    fruits.push((fruit_pos, fruit.clone()));
+}
+
+/// Used to get a random position on the board, inside the walls
+/// Returns that random position as a Position-type
+fn get_rand_block(max_x: usize, max_y: usize) -> Position {
+    let mut RNG: ThreadRng = thread_rng();
+    let x = RNG.gen_range(1..(max_x-2)) as isize;
+    let y = RNG.gen_range(1..(max_y-2)) as isize;
+    Position::new(x, y)
+} 
+
 fn gameloop_single(mut board: Board, mut player: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    player.set_fruit(board.fruit());
+    let mut fruits = vec![];
+    fruit(&mut board, player.fruit(), &mut fruits);
 
     let survival_time = Instant::now();
     loop {
         let curr_pos = player.get_pos();
         board.change_position(&curr_pos, player.get_items());
-
-        //going to top left corner
-        let secs = survival_time.elapsed().as_secs();
-        let mins = secs/60;
-        term.render(board.get_vec(), vec![
-            &format!("Size of the snake: {}", player._get_size()),
-            &format!("Fruits eaten: {}", player._get_size() - 4),
-            &format!("Time elapsed: {}:{}", mins, secs),
-        ],
-        vec![&player]);
 
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();
@@ -119,18 +136,27 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
                 _ => (),
             }
         }
-        let (p_fruit, p_pos) = player.fruit();
-        board.set_fruit(p_pos, p_fruit);
 
-        match player.move_snake(&mut board) {
-            snake::Happen::Some(_) => player.set_fruit(board.fruit()),
+        match player.move_snake(&mut board, &mut fruits) {
+            snake::Happen::Some(_) => fruit(&mut board, player.fruit(), &mut fruits),
             snake::Happen::Break => break,
-            _ => (),
+            _ => {},
         };
 
         if let Some(last_pos) = player.get_back() {
             board.remove_position(&last_pos);
         }
+
+        //going to top left corner
+        let secs = survival_time.elapsed().as_secs();
+        let mins = secs/60;
+        term.render(&board, vec![
+            &format!("Size of the snake: {}", player._get_size()),
+            &format!("Fruits eaten: {}", player._get_size() - 4),
+            &format!("Time elapsed: {}:{}", mins, secs),
+        ],
+        vec![&player],
+        &fruits);
 
         sleep(Duration::from_millis(20));
     }
@@ -143,10 +169,9 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
     let (max_x, max_y) = board.get_max_size();
     let mut term = Term::new((max_x, max_y));
 
-    player_one.set_fruit(board.fruit());
-    player_two.set_fruit(board.fruit());
-
     let survival_time = Instant::now();
+
+    let mut fruits = vec![];
     loop {
         let curr_pos_1 = player_one.get_pos();
         board.change_position(&curr_pos_1, player_one.get_items());
@@ -157,14 +182,15 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
         let mins = secs/60;
-        term.render(board.get_vec(), vec![
+        term.render(&board, vec![
             &format!("Size of the snake 1: {}", player_one._get_size()),
             &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
             &format!("Size of the snake 2: {}", player_two._get_size()),
             &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
             &format!("Time elapsed: {}:{}", mins, secs),
         ],
-        vec![&player_one, &player_two]);
+        vec![&player_one, &player_two],
+        &fruits);
 
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();
@@ -179,19 +205,14 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake) {
             }
         }
 
-        let (p_fruit, p_pos) = player_one.fruit();
-        board.set_fruit(p_pos, p_fruit);
-        let (p_fruit, p_pos) = player_two.fruit();
-        board.set_fruit(p_pos, p_fruit);
-
-        match player_one.move_snake(&mut board) {
-            snake::Happen::Some(_) => player_one.set_fruit(board.fruit()),
+        match player_one.move_snake(&mut board, &mut fruits) {
+            snake::Happen::Some(_) => fruit(&mut board, player_one.fruit(), &mut fruits),
             snake::Happen::Break => break,
             _ => (),
         };
 
-        match player_two.move_snake(&mut board) {
-            snake::Happen::Some(_) => player_two.set_fruit(board.fruit()),
+        match player_two.move_snake(&mut board, &mut fruits) {
+            snake::Happen::Some(_) => fruit(&mut board, player_two.fruit(), &mut fruits),
             snake::Happen::Break => break,
             _ => (),
         };

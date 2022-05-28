@@ -44,7 +44,6 @@ pub struct Snake {
     dirr: Directions,
     item: Items,
     fruit: Items,
-    fruit_pos: Option<Position>
 }
 
 impl Snake {
@@ -65,9 +64,8 @@ impl Snake {
             dirr: Directions::LEFT,
             item,
             fruit,
-            fruit_pos: None
         }
-        }
+    }
 
     pub fn get_back(&mut self) -> Option<Position> {
         return if self.full_size.len() >= self.size {
@@ -94,12 +92,8 @@ impl Snake {
         true
     }
 
-    pub fn fruit(&self) -> (&Items, &Option<Position>) {
-        (&self.fruit, &self.fruit_pos)
-    }
-
-    pub fn set_fruit(&mut self, fruit_pos: Position) {
-        self.fruit_pos = Some(fruit_pos)
+    pub fn fruit(&self) -> &Items {
+        &self.fruit
     }
 
     pub fn get_pos(&self) -> Position {
@@ -119,7 +113,11 @@ impl Snake {
         self.item.clone()
     }
 
-    pub fn move_snake(&mut self, board: &mut Board) -> Happen<bool> {
+    pub fn move_snake(
+        &mut self,
+        board: &mut Board,
+        fruits: &mut Vec<(Position, Items)>,
+    ) -> Happen<bool> {
         let pos = match self.dirr {
             Directions::UP => Position::new(self.pos.x, self.pos.y - 1),
             Directions::DOWN => Position::new(self.pos.x, self.pos.y + 1),
@@ -128,13 +126,16 @@ impl Snake {
         };
         let pos = board.get_overflow_pos(pos);
         return if !board.check_position(&pos, &Items::WALL) {
-            if board.check_position(&pos, &self.fruit) {
-                self.set_pos(pos);
-                Happen::Some(self.eat())
-            } else {
-                self.set_pos(pos);
-                Happen::None
+            for fruit_pos in 0..fruits.len() {
+                let each = &fruits[fruit_pos];
+                if &pos == &each.0 && &self.fruit == &each.1 {
+                    fruits.remove(fruit_pos);
+                    self.set_pos(pos);
+                    return Happen::Some(self.eat());
+                }
             }
+            self.set_pos(pos);
+            Happen::None
         } else {
             Happen::Break
         };

@@ -22,7 +22,6 @@ use crate::{
 
 const WALL: &str = " W";
 const FRUIT: &str = " %";
-const SNEK: &str = " S";
 const EMPTY: &str = "  ";
 
 pub struct Term {
@@ -50,7 +49,7 @@ impl Term {
     pub fn render(
         &mut self,
         board: &Board,
-        stats: Vec<String>,
+        stats: &Vec<String>,
         players: Vec<&Snake>,
         fruits: &Vec<(Position, Items)>,
     ) {
@@ -83,7 +82,7 @@ impl Drop for Term {
 }
 
 /// Used to print the stats to the screen
-fn print_stats<B: tui::backend::Backend>(stats: Vec<String>, f: &mut Frame<B>, chunk: Rect) {
+fn print_stats<B: tui::backend::Backend>(stats: &Vec<String>, f: &mut Frame<B>, chunk: Rect) {
     let rows: Vec<ListItem> = stats
         .iter()
         .map(|x| ListItem::new(format!("{x}")))
@@ -122,12 +121,7 @@ fn print_board<B: tui::backend::Backend>(
     }
     for player in players {
         for pos in player.get_tail() {
-            let snake = match player.get_items() {
-                Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
-                Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
-                _ => Span::from(EMPTY),
-            };
-            rows[pos.y as usize][pos.x as usize] = snake;
+            rows[pos.y as usize][pos.x as usize] = player.get_span();
         }
     }
     for (fruit_pos, fruit_type) in fruits {

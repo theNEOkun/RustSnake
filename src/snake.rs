@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, fmt::Display};
 
 use crossterm::event::Event;
+use tui::{text::Span, style::{Style, Color}};
 
 use crate::{board::Board, controller::helper_enums::{MoveOpt, Directions}, Items};
 
@@ -28,17 +29,21 @@ pub enum Happen<T> {
     None,
 }
 
-pub struct Snake {
+pub struct Snake<'a> {
     pos: Position,
     full_size: VecDeque<Position>,
     size: usize,
     keys: fn(Event) -> MoveOpt<Directions>,
     dirr: Directions,
     snake_self: Items,
+    snake: Span<'a>,
     fruit: Items,
 }
 
-impl Snake {
+const SNEK: &str = " S";
+const EMPTY: &str = "  ";
+
+impl<'a> Snake<'a> {
     /// Creates a new [`Snake`].
     pub fn new(
         start_pos: Position,
@@ -48,6 +53,12 @@ impl Snake {
     ) -> Self {
         let mut full_size = VecDeque::new();
         full_size.push_front(start_pos.clone());
+        let snake = match snake_self {
+                Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
+                Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
+                _ => Span::from(EMPTY),
+            };
+
         Snake {
             pos: start_pos,
             full_size,
@@ -55,6 +66,7 @@ impl Snake {
             keys,
             dirr: Directions::LEFT,
             snake_self,
+            snake,
             fruit,
         }
     }
@@ -103,6 +115,10 @@ impl Snake {
 
     pub fn get_items(&self) -> Items {
         self.snake_self.clone()
+    }
+
+    pub fn get_span(&self) -> Span {
+        self.snake.clone()
     }
 
     fn new_pos(&self, board: &Board) -> Position {

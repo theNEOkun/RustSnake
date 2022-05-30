@@ -1,9 +1,16 @@
 use std::{collections::VecDeque, fmt::Display};
 
 use crossterm::event::Event;
-use tui::{text::Span, style::{Style, Color}};
+use tui::{
+    style::{Color, Style},
+    text::Span,
+};
 
-use crate::{board::Board, controller::helper_enums::{MoveOpt, Directions}, Items};
+use crate::{
+    board::Board,
+    controller::helper_enums::{Directions, MoveOpt},
+    Items,
+};
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Position {
@@ -23,6 +30,7 @@ impl Position {
     }
 }
 
+#[derive(Debug, PartialEq, PartialOrd)]
 pub enum Happen<T> {
     Some(T),
     Break,
@@ -54,10 +62,10 @@ impl<'a> Snake<'a> {
         let mut full_size = VecDeque::new();
         full_size.push_front(start_pos.clone());
         let snake = match snake_self {
-                Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
-                Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
-                _ => Span::from(EMPTY),
-            };
+            Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
+            Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
+            _ => Span::from(EMPTY),
+        };
 
         Snake {
             pos: start_pos,
@@ -180,16 +188,20 @@ fn opposite(dirr: &Directions) -> Directions {
 mod test_snake {
     use crate::snake::*;
 
-    fn make_snake() -> Snake {
-        Snake::new(Position::new(4, 4), vec![])
+    fn make_snake<'a>() -> Snake<'a> {
+        Snake::new(Position::new(4, 4), Items::SNAKE, Items::FRUIT, test_function)
+    }
+
+    fn test_function(event: Event) -> MoveOpt<Directions> {
+        return MoveOpt::None
     }
 
     #[test]
     fn test_get_position() {
-        let snake = make_snake();
-        assert_eq!(Position::new(2, 2), snake.get_pos());
-        let new_pos = snake.move_snake(&Directions::DOWN);
-        assert_eq!(Position::new(2, 3), new_pos);
+        let mut snake = make_snake();
+        assert_eq!(Position::new(4, 4), snake.get_pos());
+        let new_pos = snake.move_snake(&mut Board::new(4, 4, true), &mut vec![(Position::new(0, 0), Items::FRUIT)]);
+        assert_eq!(Happen::None, new_pos);
     }
 
     #[test]

@@ -1,6 +1,7 @@
 mod board;
 mod snake;
 mod terminal;
+mod controller;
 
 use board::Board;
 use clap::Parser;
@@ -8,8 +9,9 @@ use rand::{
     prelude::{thread_rng, ThreadRng},
     Rng,
 };
-use snake::{Directions, Position, Snake};
-use terminal::{MoveOpt, Term};
+use snake::{Position, Snake};
+use terminal::Term;
+use controller::MoveOpt;
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
 
@@ -46,50 +48,6 @@ struct Args {
 
     #[clap(short, long)]
     share_fruit: bool,
-}
-
-fn get_player_one(input: Event) -> MoveOpt<Directions> {
-    match input {
-        Event::Key(KeyEvent {
-            code: KeyCode::Left,
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::LEFT),
-        Event::Key(KeyEvent {
-            code: KeyCode::Right,
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::RIGHT),
-        Event::Key(KeyEvent {
-            code: KeyCode::Up,
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::UP),
-        Event::Key(KeyEvent {
-            code: KeyCode::Down,
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::DOWN),
-        _ => MoveOpt::Same,
-    }
-}
-
-fn get_player_two(input: Event) -> MoveOpt<Directions> {
-    match input {
-        Event::Key(KeyEvent {
-            code: KeyCode::Char('a'),
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::LEFT),
-        Event::Key(KeyEvent {
-            code: KeyCode::Char('d'),
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::RIGHT),
-        Event::Key(KeyEvent {
-            code: KeyCode::Char('w'),
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::UP),
-        Event::Key(KeyEvent {
-            code: KeyCode::Char('s'),
-            modifiers: KeyModifiers::NONE,
-        }) => MoveOpt::Some(Directions::DOWN),
-        _ => MoveOpt::Same,
-    }
 }
 
 /// Used to set a new fruit on the board
@@ -260,13 +218,13 @@ fn main() {
                     snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
                     Items::SNAKE,
                     Items::FRUIT,
-                    get_player_one,
+                    controller::get_player_one,
                 ),
                 Snake::new(
                     snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
                     Items::OSNAKE,
                     Items::FRUIT,
-                    get_player_two,
+                    controller::get_player_two,
                 ),
                 args.share_fruit
             );
@@ -277,13 +235,13 @@ fn main() {
                     snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
                     Items::SNAKE,
                     Items::FRUIT,
-                    get_player_one,
+                    controller::get_player_one,
                 ),
                 Snake::new(
                     snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
                     Items::OSNAKE,
                     Items::OFRUIT,
-                    get_player_two,
+                    controller::get_player_two,
                 ),
                 args.share_fruit
             );
@@ -295,7 +253,7 @@ fn main() {
                 snake::Position::new((size_x / 2) as isize, (size_y / 2) as isize),
                 Items::SNAKE,
                 Items::FRUIT,
-                get_player_one,
+                controller::get_player_one,
             ),
         );
     };

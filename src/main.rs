@@ -11,7 +11,7 @@ use rand::{
 };
 use snake::{Position, Snake};
 use terminal::Term;
-use controller::MoveOpt;
+use controller::helper_enums::MoveOpt;
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
 

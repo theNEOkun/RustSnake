@@ -2,7 +2,7 @@ use std::{collections::VecDeque, fmt::Display};
 
 use crossterm::event::Event;
 
-use crate::{board::Board, controller::{MoveOpt, Directions}, Items};
+use crate::{board::Board, controller::helper_enums::{MoveOpt, Directions}, Items};
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Position {

@@ -1,18 +1,8 @@
+pub mod helper_enums;
+
 use crossterm::event::{ Event, KeyEvent, KeyCode, KeyModifiers };
 
-pub enum MoveOpt<T> {
-    Some(T),
-    Same,
-    None,
-}
-
-#[derive(PartialEq, PartialOrd, Clone)]
-pub enum Directions {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-}
+use self::helper_enums::{Directions, MoveOpt};
 
 pub fn get_player_one(input: Event) -> MoveOpt<Directions> {
     match input {
@@ -56,4 +46,8 @@ pub fn get_player_two(input: Event) -> MoveOpt<Directions> {
         }) => MoveOpt::Some(Directions::DOWN),
         _ => MoveOpt::Same,
     }
+}
+
+pub fn handle_movement() {
+
 }

@@ -12,7 +12,7 @@ use tui::{
     Frame, Terminal,
 };
 
-use std::io::{stdout, Stdout};
+use std::{collections::VecDeque, io::{stdout, Stdout}};
 
 use crate::Items;
 use crate::{
@@ -48,9 +48,9 @@ impl Term {
 
     pub fn render(
         &mut self,
-        board: &Board,
+        board: &Vec<Vec<Items>>,
         stats: &Vec<String>,
-        players: Vec<&Snake>,
+        players: &Vec<(VecDeque<Position>, Span)>,
         fruits: &Vec<(Position, Items)>,
     ) {
         self.terminal
@@ -102,14 +102,14 @@ fn print_stats<B: tui::backend::Backend>(stats: &Vec<String>, f: &mut Frame<B>, 
 ///board is the board to print
 ///stdout is used to print
 fn print_board<B: tui::backend::Backend>(
-    board: &Board,
-    players: Vec<&Snake>,
+    board: &Vec<Vec<Items>>,
+    players: &Vec<(VecDeque<Position>, Span)>,
     fruits: &Vec<(Position, Items)>,
     f: &mut Frame<B>,
     chunk: Rect,
 ) {
     let mut rows = vec![];
-    for each in board.get_vec() {
+    for each in board {
         let mut cell_row = vec![];
         for cell in each {
             cell_row.push(match cell {
@@ -119,9 +119,9 @@ fn print_board<B: tui::backend::Backend>(
         }
         rows.push(cell_row);
     }
-    for player in players {
-        for pos in player.get_tail() {
-            rows[pos.y as usize][pos.x as usize] = player.get_span();
+    for (pos_vec, span) in players {
+        for pos in pos_vec {
+            rows[pos.y as usize][pos.x as usize] = span.clone();
         }
     }
     for (fruit_pos, fruit_type) in fruits {

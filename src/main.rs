@@ -111,9 +111,9 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
         let mut p_info = player.get_info();
         p_info.push(format!("Time elapsed: {}:{}", mins, secs));
         term.render(
-            &board,
+            board.get_vec(),
             &p_info,
-            vec![&player],
+            &vec![(player.get_tail().clone(), player.get_span())],
             &fruits,
         );
 
@@ -183,9 +183,9 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake, shar
         p_info.append(&mut player_two.get_info());
         p_info.push(format!("Time elapsed: {}:{}", mins, secs));
         term.render(
-            &board,
+            board.get_vec(),
             &p_info,
-            vec![&player_one, &player_two],
+            &vec![(player_one.get_tail().clone(), player_one.get_span()), (player_two.get_tail().clone(), player_two.get_span())],
             &fruits,
         );
 

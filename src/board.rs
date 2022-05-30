@@ -12,8 +12,7 @@ pub const DEFAULT: usize = 16;
 pub struct Board {
     board: Vec<Vec<Items>>,
     max_x: usize,
-    max_y: usize,
-    fruits: Vec<Position>
+    max_y: usize
 }
 
 /// Used to get a board where there are no gaps in the walls
@@ -61,8 +60,7 @@ impl Board {
         Self {
             board,
             max_x: size_x,
-            max_y: size_y,
-            fruits: vec![]
+            max_y: size_y
         }
     }
 
@@ -185,11 +183,5 @@ mod board_test {
         assert!(board.check_position(&pos, &Items::EMPTY));
         assert!(board.change_position(&pos, Items::SNAKE));
         assert!(board.check_position(&pos, &Items::SNAKE));
-    }
-
-    #[test]
-    fn test_add_fruit() {
-        let mut board = get_board();
-        assert!(board.fruit());
     }
 }

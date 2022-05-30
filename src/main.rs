@@ -11,7 +11,6 @@ use rand::{
 };
 use snake::{Position, Snake};
 use terminal::Term;
-use controller::helper_enums::MoveOpt;
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
 
@@ -147,22 +146,6 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake, shar
         let curr_pos_2 = player_two.get_pos();
         board.change_position(&curr_pos_2, player_two.get_items());
 
-        //going to top left corner
-        let secs = survival_time.elapsed().as_secs();
-        let mins = secs / 60;
-        term.render(
-            &board,
-            vec![
-                &format!("Size of the snake 1: {}", player_one._get_size()),
-                &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
-                &format!("Size of the snake 2: {}", player_two._get_size()),
-                &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
-                &format!("Time elapsed: {}:{}", mins, secs),
-            ],
-            vec![&player_one, &player_two],
-            &fruits,
-        );
-
         if poll(Duration::from_millis(100)).unwrap() {
             let event = read().unwrap();
             player_one.mover(event);
@@ -194,6 +177,22 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake, shar
         if let Some(last_pos) = player_two.get_back() {
             board.remove_position(&last_pos);
         }
+
+        //going to top left corner
+        let secs = survival_time.elapsed().as_secs();
+        let mins = secs / 60;
+        term.render(
+            &board,
+            vec![
+                &format!("Size of the snake 1: {}", player_one._get_size()),
+                &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
+                &format!("Size of the snake 2: {}", player_two._get_size()),
+                &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
+                &format!("Time elapsed: {}:{}", mins, secs),
+            ],
+            vec![&player_one, &player_two],
+            &fruits,
+        );
 
         sleep(Duration::from_millis(20));
     }

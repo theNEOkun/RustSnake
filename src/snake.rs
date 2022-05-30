@@ -141,6 +141,13 @@ impl Snake {
     pub fn get_tail(&self) -> &VecDeque<Position> {
         &self.full_size
     }
+
+    pub fn get_info(&self) -> Vec<String> {
+        vec![
+            format!("Current size: {}", self._get_size()),
+            format!("Fruits eaten: {}", self._get_size() - 4),
+        ]
+    }
 }
 
 /// Method used to get the opposite direction of a given direction

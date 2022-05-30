@@ -50,7 +50,7 @@ impl Term {
     pub fn render(
         &mut self,
         board: &Board,
-        stats: Vec<&str>,
+        stats: Vec<String>,
         players: Vec<&Snake>,
         fruits: &Vec<(Position, Items)>,
     ) {
@@ -83,7 +83,7 @@ impl Drop for Term {
 }
 
 /// Used to print the stats to the screen
-fn print_stats<B: tui::backend::Backend>(stats: Vec<&str>, f: &mut Frame<B>, chunk: Rect) {
+fn print_stats<B: tui::backend::Backend>(stats: Vec<String>, f: &mut Frame<B>, chunk: Rect) {
     let rows: Vec<ListItem> = stats
         .iter()
         .map(|x| ListItem::new(format!("{x}")))

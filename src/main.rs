@@ -108,13 +108,11 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
         let mins = secs / 60;
+        let mut p_info = player.get_info();
+        p_info.push(format!("Time elapsed: {}:{}", mins, secs));
         term.render(
             &board,
-            vec![
-                &format!("Size of the snake: {}", player._get_size()),
-                &format!("Fruits eaten: {}", player._get_size() - 4),
-                &format!("Time elapsed: {}:{}", mins, secs),
-            ],
+            p_info,
             vec![&player],
             &fruits,
         );
@@ -181,15 +179,12 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake, shar
         //going to top left corner
         let secs = survival_time.elapsed().as_secs();
         let mins = secs / 60;
+        let mut p_info = player_one.get_info();
+        p_info.append(&mut player_two.get_info());
+        p_info.push(format!("Time elapsed: {}:{}", mins, secs));
         term.render(
             &board,
-            vec![
-                &format!("Size of the snake 1: {}", player_one._get_size()),
-                &format!("Fruits eaten 1: {}", player_one._get_size() - 4),
-                &format!("Size of the snake 2: {}", player_two._get_size()),
-                &format!("Fruits eaten 2: {}", player_two._get_size() - 4),
-                &format!("Time elapsed: {}:{}", mins, secs),
-            ],
+            p_info,
             vec![&player_one, &player_two],
             &fruits,
         );

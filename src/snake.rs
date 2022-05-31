@@ -40,7 +40,7 @@ pub enum Happen<T> {
 
 pub struct Snake<'a> {
     pos: Position,
-    full_size: VecDeque<Position>,
+    tail: VecDeque<Position>,
     size: usize,
     keys: fn(Event) -> MoveOpt<Directions>,
     dirr: Directions,
@@ -57,8 +57,8 @@ impl<'a> Snake<'a> {
         fruit: Items,
         keys: fn(Event) -> MoveOpt<Directions>,
     ) -> Self {
-        let mut full_size = VecDeque::new();
-        full_size.push_front(start_pos.clone());
+        let mut tail = VecDeque::new();
+        tail.push_front(start_pos.clone());
         let snake = match snake_self {
             Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
             Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
@@ -67,7 +67,7 @@ impl<'a> Snake<'a> {
 
         Snake {
             pos: start_pos,
-            full_size,
+            tail,
             size: 4,
             keys,
             dirr: Directions::LEFT,
@@ -78,8 +78,8 @@ impl<'a> Snake<'a> {
     }
 
     pub fn get_back(&mut self) -> Option<Position> {
-        return if self.full_size.len() >= self.size {
-            Some(self.full_size.pop_back().unwrap())
+        return if self.tail.len() > self.size {
+            Some(self.tail.pop_back().unwrap())
         } else {
             None
         };
@@ -112,7 +112,7 @@ impl<'a> Snake<'a> {
 
     pub fn set_pos(&mut self, pos: Position) {
         self.pos = pos.clone();
-        self.full_size.push_front(pos);
+        self.tail.push_front(pos);
     }
 
     pub fn _get_size(&self) -> usize {
@@ -143,7 +143,6 @@ impl<'a> Snake<'a> {
         fruits: &mut Vec<(Position, Items)>,
     ) -> Happen<bool> {
         let pos = self.new_pos(board);
-        //return if !(board.check_position(&pos, &Items::WALL) || board.check_position(&pos, &self.snake_self)) {
         return if !board.check_position(&pos, &Items::EMPTY) {
             for fruit_pos in 0..fruits.len() {
                 let each = &fruits[fruit_pos];
@@ -161,7 +160,7 @@ impl<'a> Snake<'a> {
     }
 
     pub fn get_tail(&self) -> &VecDeque<Position> {
-        &self.full_size
+        &self.tail
     }
 
     pub fn get_info(&self) -> Vec<String> {

@@ -37,18 +37,24 @@ pub enum Items {
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    #[clap(short, default_value_t = 0)]
+
+    /// Set the size in the x-direction
+    #[clap(short, default_value_t = 16)]
     x: usize,
 
-    #[clap(short, default_value_t = 0)]
+    /// Set the size in the y-direction
+    #[clap(short, default_value_t = 16)]
     y: usize,
 
+    /// Multiplayer
     #[clap(short, long)]
     multipl: bool,
 
+    /// Should there be gaps in the walls to go to the other side?
     #[clap(short, long)]
     gaps: bool,
 
+    /// Should the snakes share the fruit
     #[clap(short, long)]
     share_fruit: bool,
 }

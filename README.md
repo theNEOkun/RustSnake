@@ -1,6 +1,7 @@
 # Snake
 
-This is a small project to create Snake in rust
+This is a small project to create Snake in rust. It is written using 100% rust, and should be cross-platform, to be used in the terminal
+on any OS.
 
 ## Movement
 

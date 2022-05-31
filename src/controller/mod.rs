@@ -1,8 +1,6 @@
 pub mod helper_enums;
 
-use std::{sync::mpsc::*, thread, time::Duration};
-
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 
 use self::helper_enums::{Directions, MoveOpt};
 
@@ -48,12 +46,4 @@ pub fn get_player_two(input: Event) -> MoveOpt<Directions> {
         }) => MoveOpt::Some(Directions::DOWN),
         _ => MoveOpt::Same,
     }
-}
-
-pub fn handle_movement(p1_rec: Receiver<Directions>, p2_rec: Receiver<Directions>) {
-    thread::spawn(|| if poll(Duration::from_millis(100)).unwrap() {
-        match read().unwrap() {
-
-        }
-    });
 }

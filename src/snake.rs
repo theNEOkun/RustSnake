@@ -10,6 +10,7 @@ use crate::{
     board::Board,
     controller::helper_enums::{Directions, MoveOpt},
     Items,
+    consts::{SNEK, EMPTY}
 };
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -47,9 +48,6 @@ pub struct Snake<'a> {
     snake: Span<'a>,
     fruit: Items,
 }
-
-const SNEK: &str = " S";
-const EMPTY: &str = "  ";
 
 impl<'a> Snake<'a> {
     /// Creates a new [`Snake`].

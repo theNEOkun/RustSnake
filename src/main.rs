@@ -2,6 +2,7 @@ mod board;
 mod snake;
 mod terminal;
 mod controller;
+mod consts;
 
 use board::Board;
 use clap::Parser;
@@ -9,14 +10,17 @@ use rand::{
     prelude::{thread_rng, ThreadRng},
     Rng,
 };
+
+use consts::*;
 use snake::{Position, Snake};
 use terminal::Term;
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
+use tui::{text::{Span, Spans}, style::{Style, Color}};
 
 use std::{
     thread::sleep,
-    time::{Duration, Instant},
+    time::{Duration, Instant}, collections::VecDeque,
 };
 
 ///!Used to differentiate the different items
@@ -58,7 +62,7 @@ pub fn fruit(board: &mut Board, fruit: &Items, fruits: &mut Vec<(Position, Items
     while !board.check_position(&fruit_pos, &Items::EMPTY) {
         fruit_pos = get_rand_block(max_x, max_y);
     }
-    board[&fruit_pos] = fruit.clone();
+    board[&fruit_pos] = (fruit.clone(), Span::from(""));
     fruits.push((fruit_pos, fruit.clone()));
 }
 
@@ -111,10 +115,11 @@ fn gameloop_single(mut board: Board, mut player: Snake) {
         let mut p_info = player.get_info();
         p_info.push(format!("Time elapsed: {}:{}", mins, secs));
         term.render(
-            board.get_vec(),
+            add_fruits_n_pl(
+                board.get_vec(),
+                &vec![(player.get_tail().clone(), player.get_span())],
+                &fruits),
             &p_info,
-            &vec![(player.get_tail().clone(), player.get_span())],
-            &fruits,
         );
 
         sleep(Duration::from_millis(20));
@@ -183,14 +188,41 @@ fn gameloop(mut board: Board, mut player_one: Snake, mut player_two: Snake, shar
         p_info.append(&mut player_two.get_info());
         p_info.push(format!("Time elapsed: {}:{}", mins, secs));
         term.render(
-            board.get_vec(),
-            &p_info,
-            &vec![(player_one.get_tail().clone(), player_one.get_span()), (player_two.get_tail().clone(), player_two.get_span())],
-            &fruits,
+            add_fruits_n_pl(
+                board.get_vec(),
+                &vec![(player_one.get_tail().clone(), player_one.get_span()), (player_two.get_tail().clone(), player_two.get_span())],
+                &fruits),
+                &p_info
         );
 
         sleep(Duration::from_millis(20));
     }
+}
+
+fn add_fruits_n_pl<'a>(board: &'a Vec<Vec<(Items, Span)>>, players: &'a Vec<(VecDeque<Position>, Span)>, fruits: &Vec<(Position, Items)>) -> Vec<Spans<'a>>{
+    let mut rows: Vec<Vec<Span<'a>>> = vec![];
+    for each in board {
+        let row = each.iter().map(|x| x.1.clone()).collect();
+        rows.push(row);
+    }
+    for (pos_vec, span) in players {
+        for pos in pos_vec {
+            rows[pos.y as usize][pos.x as usize] = span.clone();
+        }
+    }
+    for (fruit_pos, fruit_type) in fruits {
+        let fruit = match fruit_type {
+            Items::FRUIT => Span::styled(FRUIT, Style::default().fg(Color::Red)),
+            Items::OFRUIT => Span::styled(FRUIT, Style::default().fg(Color::Blue)),
+            _ => Span::from(EMPTY),
+        };
+        rows[fruit_pos.y as usize][fruit_pos.x as usize] = fruit;
+    }
+    let mut para = vec![];
+    for each in rows {
+        para.push(Spans::from(each));
+    }
+    para
 }
 
 //Main-method

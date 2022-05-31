@@ -1,5 +1,12 @@
+use tui::style::Color;
+use tui::{
+text::Span,
+style::Style,
+};
+
 use crate::snake::Position;
 use crate::Items;
+use crate::consts::*;
 
 use std::ops::{
     Index,
@@ -9,21 +16,21 @@ use std::ops::{
 pub const DEFAULT: usize = 16;
 
 /// Contains the entire board, with interactions with it
-pub struct Board {
-    board: Vec<Vec<Items>>,
+pub struct Board<'a> {
+    board: Vec<Vec<(Items, Span<'a>)>>,
     max_x: usize,
     max_y: usize
 }
 
 /// Used to get a board where there are no gaps in the walls
-fn board_ngates(size_x: usize, size_y: usize) -> Vec<Vec<Items>>  {
-    let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
+fn board_ngates<'a>(size_x: usize, size_y: usize) -> Vec<Vec<(Items, Span<'a>)>>  {
+    let mut board = vec![vec![(Items::EMPTY, Span::from(EMPTY)); size_x]; size_y];
     for y_pos in 0..board.len() {
         for x_pos in 0..board[y_pos].len() {
             if x_pos == (size_x - 1) || x_pos == 0 {
-                board[y_pos][x_pos] = Items::WALL;
+                board[y_pos][x_pos] = (Items::WALL, Span::styled(WALL, Style::default().bg(Color::White)));
             } else if y_pos == (size_y-1) || y_pos == 0 {
-                board[y_pos][x_pos] = Items::WALL;
+                board[y_pos][x_pos] = (Items::WALL, Span::styled(WALL, Style::default().bg(Color::White)));
             }
         } 
     }
@@ -31,17 +38,17 @@ fn board_ngates(size_x: usize, size_y: usize) -> Vec<Vec<Items>>  {
 }
 
 /// Used to get a board where there are gaps in the walls
-fn board_gates(size_x: usize, size_y: usize) -> Vec<Vec<Items>> {
-    let mut board = vec![vec![Items::EMPTY; size_x]; size_y];
+fn board_gates<'a>(size_x: usize, size_y: usize) -> Vec<Vec<(Items, Span<'a>)>> {
+    let mut board = vec![vec![(Items::EMPTY, Span::from(EMPTY)); size_x]; size_y];
     for y_pos in 0..board.len() {
         for x_pos in 0..board[y_pos].len() {
             if x_pos == (size_x - 1) || x_pos == 0 {
                 if y_pos > ((size_y/2) + 2) || y_pos < ((size_y/2) - 2) {
-                    board[y_pos][x_pos] = Items::WALL;
+                    board[y_pos][x_pos] = (Items::WALL, Span::styled(WALL, Style::default().bg(Color::White)));
                 }
             } else if y_pos == (size_y-1) || y_pos == 0 {
                 if x_pos > ((size_x/2) + 2) || x_pos < ((size_x/2) - 2) {
-                    board[y_pos][x_pos] = Items::WALL;
+                    board[y_pos][x_pos] = (Items::WALL, Span::styled(WALL, Style::default().bg(Color::White)));
                 }
             }
         }
@@ -49,7 +56,7 @@ fn board_gates(size_x: usize, size_y: usize) -> Vec<Vec<Items>> {
     board
 }
 
-impl Board {
+impl<'a> Board<'a> {
     /// Creates a new boad, and populates it
     pub fn new(size_x: usize, size_y: usize, gates: bool) -> Self {
         let board = if gates {
@@ -70,14 +77,19 @@ impl Board {
 
     /// Checks if a position is empty
     pub fn check_position(&self, pos: &Position, ident: &Items) -> bool {
-        self[pos] == *ident
+        self[pos].0 == *ident
     }
 
     /// Changes a position to another if it is not a wall
     /// Returns true if the position changes, else false
-    pub fn change_position(&mut self, pos: &Position, change: Items) -> bool {
+    pub fn change_position(&mut self, pos: &Position, item: Items) -> bool {
         return if !(self.check_position(pos, &Items::WALL) || self.check_position(pos, &Items::SNAKE)) {
-            self[pos] = change;
+        let snake = match item {
+            Items::SNAKE => (Span::styled(SNEK, Style::default().bg(Color::Green))),
+            Items::OSNAKE => (Span::styled(SNEK, Style::default().bg(Color::Yellow))),
+            _ => Span::from(EMPTY),
+        };
+            self[pos] = (item, snake);
             true
         } else {
             false
@@ -86,7 +98,7 @@ impl Board {
 
     pub fn remove_position(&mut self, pos: &Position) -> bool {
         return if !self.check_position(pos, &Items::WALL){
-            self[pos] = Items::EMPTY;
+            self[pos] = (Items::EMPTY, Span::from(EMPTY));
             true
         } else {
             false
@@ -109,40 +121,40 @@ impl Board {
     }
 
     /// Returns the underlying vectors
-    pub fn get_vec(&self) -> &Vec<Vec<Items>> {
+    pub fn get_vec(&self) -> &Vec<Vec<(Items, Span<'a>)>> {
         &self.board
     } 
 }
 
-impl Default for Board {
+impl<'a> Default for Board<'a> {
     fn default() -> Self {
         Self::new(DEFAULT, DEFAULT, false)
     }
 }
 
-impl Index<&Position> for Board {
-    type Output = Items;
+impl<'a> Index<&Position> for Board<'a> {
+    type Output = (Items, Span<'a>);
 
     fn index(&self, index: &Position) -> &Self::Output {
         &self.board[index.y as usize][index.x as usize]
     }
 }
 
-impl IndexMut<&Position> for Board {
+impl<'a> IndexMut<&Position> for Board<'a> {
     fn index_mut(&mut self, index: &Position) -> &mut Self::Output {
         &mut self.board[index.y as usize][index.x as usize]
     }
 }
 
-impl Index<Position> for Board {
-    type Output = Items;
+impl<'a> Index<Position> for Board<'a> {
+    type Output = (Items, Span<'a>);
 
     fn index(&self, index: Position) -> &Self::Output {
         &self.board[index.y as usize][index.x as usize]
     }
 }
 
-impl IndexMut<Position> for Board {
+impl<'a> IndexMut<Position> for Board<'a> {
     fn index_mut(&mut self, index: Position) -> &mut Self::Output {
         &mut self.board[index.y as usize][index.x as usize]
     }

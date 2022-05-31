@@ -6,23 +6,12 @@ use crossterm::{
 use tui::{
     backend::CrosstermBackend,
     layout::Rect,
-    style::{Color, Style},
-    text::{Span, Spans},
+    text::Spans,
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
 
-use std::{collections::VecDeque, io::{stdout, Stdout}};
-
-use crate::Items;
-use crate::{
-    board::Board,
-    snake::{Position, Snake},
-};
-
-const WALL: &str = " W";
-const FRUIT: &str = " %";
-const EMPTY: &str = "  ";
+use std::io::{stdout, Stdout};
 
 pub struct Term {
     stdout: Stdout,
@@ -46,12 +35,10 @@ impl Term {
         term
     }
 
-    pub fn render(
+    pub fn render<'a>(
         &mut self,
-        board: &Vec<Vec<Items>>,
+        board: Vec<Spans<'a>>,
         stats: &Vec<String>,
-        players: &Vec<(VecDeque<Position>, Span)>,
-        fruits: &Vec<(Position, Items)>,
     ) {
         self.terminal
             .draw(|f| {
@@ -67,7 +54,7 @@ impl Term {
                     width: self.board_size.0,
                     height: self.board_size.1,
                 };
-                print_board(board, players, fruits, f, board_rect);
+                print_board(board, f, board_rect);
                 print_stats(stats, f, stats_rect);
             })
             .unwrap();
@@ -101,42 +88,12 @@ fn print_stats<B: tui::backend::Backend>(stats: &Vec<String>, f: &mut Frame<B>, 
 ///
 ///board is the board to print
 ///stdout is used to print
-fn print_board<B: tui::backend::Backend>(
-    board: &Vec<Vec<Items>>,
-    players: &Vec<(VecDeque<Position>, Span)>,
-    fruits: &Vec<(Position, Items)>,
+fn print_board<'a, B: tui::backend::Backend>(
+    paragraph: Vec<Spans<'a>>,
     f: &mut Frame<B>,
     chunk: Rect,
 ) {
-    let mut rows = vec![];
-    for each in board {
-        let mut cell_row = vec![];
-        for cell in each {
-            cell_row.push(match cell {
-                Items::WALL => Span::styled(WALL, Style::default().bg(Color::Gray)),
-                _ => Span::from(EMPTY),
-            });
-        }
-        rows.push(cell_row);
-    }
-    for (pos_vec, span) in players {
-        for pos in pos_vec {
-            rows[pos.y as usize][pos.x as usize] = span.clone();
-        }
-    }
-    for (fruit_pos, fruit_type) in fruits {
-        let fruit = match fruit_type {
-            Items::FRUIT => Span::styled(FRUIT, Style::default().fg(Color::Red)),
-            Items::OFRUIT => Span::styled(FRUIT, Style::default().fg(Color::Blue)),
-            _ => Span::from(EMPTY),
-        };
-        rows[fruit_pos.y as usize][fruit_pos.x as usize] = fruit;
-    }
-    let mut paragraph = vec![];
-    for each in rows {
-        paragraph.push(Spans::from(each));
-    }
-    let text = Paragraph::new(paragraph).block(
+    let text = Paragraph::new(paragraph.clone()).block(
         Block::default()
             .title("Snake")
             .borders(Borders::ALL)
